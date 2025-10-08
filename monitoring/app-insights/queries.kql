@@ -1,0 +1,300 @@
+// Application Insights Kusto Queries for Knowledge Assistant Monitoring
+
+// ============================================
+// 1. QUERY PERFORMANCE METRICS
+// ============================================
+
+// Average response time by endpoint
+requests
+| where timestamp > ago(24h)
+| where name startswith "POST /api/query"
+| summarize 
+    RequestCount = count(),
+    AvgDuration = avg(duration),
+    P95Duration = percentile(duration, 95),
+    P99Duration = percentile(duration, 99)
+by name
+| order by RequestCount desc
+
+
+// Query processing time distribution
+customEvents
+| where timestamp > ago(7d)
+| where name == "query.completed"
+| extend processingTime = todouble(customDimensions["processingTimeMs"])
+| summarize 
+    Count = count(),
+    Avg = avg(processingTime),
+    P50 = percentile(processingTime, 50),
+    P95 = percentile(processingTime, 95),
+    P99 = percentile(processingTime, 99)
+| project Count, Avg, P50, P95, P99
+
+
+// ============================================
+// 2. USER ANALYTICS
+// ============================================
+
+// Active users per day
+customEvents
+| where timestamp > ago(30d)
+| where name == "query.received"
+| extend userId = tostring(customDimensions["userId"])
+| summarize UniqueUsers = dcount(userId) by bin(timestamp, 1d)
+| render timechart
+
+
+// Top users by query count
+customEvents
+| where timestamp > ago(7d)
+| where name == "query.received"
+| extend userId = tostring(customDimensions["userId"])
+| summarize QueryCount = count() by userId
+| order by QueryCount desc
+| take 20
+
+
+// User satisfaction from feedback
+customEvents
+| where timestamp > ago(30d)
+| where name == "query.feedback"
+| extend 
+    rating = toint(customDimensions["rating"]),
+    helpful = tobool(customDimensions["helpful"])
+| summarize 
+    TotalFeedback = count(),
+    AvgRating = avg(rating),
+    HelpfulPercentage = countif(helpful) * 100.0 / count()
+
+
+// ============================================
+// 3. ERROR TRACKING
+// ============================================
+
+// Error rate over time
+requests
+| where timestamp > ago(24h)
+| summarize 
+    Total = count(),
+    Errors = countif(success == false),
+    ErrorRate = countif(success == false) * 100.0 / count()
+by bin(timestamp, 15m)
+| render timechart
+
+
+// Top errors by type
+exceptions
+| where timestamp > ago(7d)
+| summarize Count = count() by problemId, outerMessage
+| order by Count desc
+| take 20
+
+
+// Failed requests with details
+requests
+| where timestamp > ago(24h)
+| where success == false
+| project 
+    timestamp,
+    name,
+    resultCode,
+    duration,
+    operation_Id,
+    customDimensions
+| order by timestamp desc
+| take 100
+
+
+// ============================================
+// 4. DEPENDENCY HEALTH
+// ============================================
+
+// Azure OpenAI performance
+dependencies
+| where timestamp > ago(24h)
+| where type == "Azure OpenAI"
+| summarize 
+    CallCount = count(),
+    AvgDuration = avg(duration),
+    SuccessRate = countif(success) * 100.0 / count(),
+    FailureCount = countif(success == false)
+by name
+| order by CallCount desc
+
+
+// Cognitive Search performance
+dependencies
+| where timestamp > ago(24h)
+| where type == "Azure Search"
+| summarize 
+    SearchCount = count(),
+    AvgDuration = avg(duration),
+    SuccessRate = countif(success) * 100.0 / count()
+by bin(timestamp, 1h)
+| render timechart
+
+
+// Dependency failures
+dependencies
+| where timestamp > ago(7d)
+| where success == false
+| summarize FailureCount = count() by type, name, resultCode
+| order by FailureCount desc
+
+
+// ============================================
+// 5. COST AND TOKEN USAGE
+// ============================================
+
+// Token usage metrics
+customMetrics
+| where timestamp > ago(24h)
+| where name in ("openai.prompt_tokens", "openai.completion_tokens", "openai.total_tokens")
+| summarize TotalTokens = sum(value) by name
+| extend EstimatedCost = case(
+    name == "openai.prompt_tokens", TotalTokens * 0.03 / 1000,
+    name == "openai.completion_tokens", TotalTokens * 0.06 / 1000,
+    0.0
+)
+
+
+// Daily token usage trend
+customMetrics
+| where timestamp > ago(30d)
+| where name == "openai.total_tokens"
+| summarize DailyTokens = sum(value) by bin(timestamp, 1d)
+| render timechart
+
+
+// ============================================
+// 6. RAG QUALITY METRICS
+// ============================================
+
+// Average confidence scores
+customEvents
+| where timestamp > ago(7d)
+| where name == "query.completed"
+| extend confidence = todouble(customDimensions["confidence"])
+| summarize 
+    AvgConfidence = avg(confidence),
+    LowConfidenceCount = countif(confidence < 70)
+| project AvgConfidence, LowConfidenceCount
+
+
+// Sources retrieved per query
+customEvents
+| where timestamp > ago(7d)
+| where name == "query.completed"
+| extend sourcesCount = toint(customDimensions["sourcesCount"])
+| summarize 
+    AvgSources = avg(sourcesCount),
+    NoSourcesCount = countif(sourcesCount == 0)
+
+
+// ============================================
+// 7. BUSINESS METRICS
+// ============================================
+
+// Query volume trends
+customEvents
+| where timestamp > ago(90d)
+| where name == "query.received"
+| summarize QueryCount = count() by bin(timestamp, 1d)
+| render timechart
+
+
+// Peak usage hours
+customEvents
+| where timestamp > ago(7d)
+| where name == "query.received"
+| extend hour = hourofday(timestamp)
+| summarize QueryCount = count() by hour
+| render columnchart
+
+
+// Bot escalations
+customEvents
+| where timestamp > ago(30d)
+| where name == "BotEscalation"
+| summarize EscalationCount = count() by bin(timestamp, 1d)
+| render timechart
+
+
+// ============================================
+// 8. ALERTS AND ANOMALIES
+// ============================================
+
+// Detect sudden spike in errors
+let baseline = requests
+| where timestamp between (ago(7d) .. ago(1d))
+| summarize BaselineErrorRate = countif(success == false) * 100.0 / count();
+requests
+| where timestamp > ago(1h)
+| summarize CurrentErrorRate = countif(success == false) * 100.0 / count()
+| extend Baseline = toscalar(baseline)
+| extend Anomaly = CurrentErrorRate > Baseline * 2
+
+
+// Slow query detection
+requests
+| where timestamp > ago(1h)
+| where name startswith "POST /api/query"
+| where duration > 5000
+| project 
+    timestamp,
+    name,
+    duration,
+    operation_Id,
+    customDimensions
+
+
+// ============================================
+// 9. CUSTOM DASHBOARDS
+// ============================================
+
+// Executive summary
+let timeRange = ago(24h);
+let queries = customEvents | where timestamp > timeRange | where name == "query.received" | count;
+let users = customEvents | where timestamp > timeRange | where name == "query.received" | extend userId = tostring(customDimensions["userId"]) | summarize dcount(userId);
+let avgResponseTime = requests | where timestamp > timeRange | where name startswith "POST /api/query" | summarize avg(duration);
+let errorRate = requests | where timestamp > timeRange | summarize countif(success == false) * 100.0 / count();
+print 
+    TotalQueries = toscalar(queries),
+    UniqueUsers = toscalar(users),
+    AvgResponseTimeMs = toscalar(avgResponseTime),
+    ErrorRatePercent = toscalar(errorRate)
+
+
+// ============================================
+// 10. COMPLIANCE AND AUDIT
+// ============================================
+
+// User activity audit trail
+customEvents
+| where timestamp > ago(30d)
+| where name in ("query.received", "query.feedback", "BotEscalation")
+| extend 
+    userId = tostring(customDimensions["userId"]),
+    userName = tostring(customDimensions["userName"])
+| project 
+    timestamp,
+    name,
+    userId,
+    userName,
+    customDimensions
+| order by timestamp desc
+
+
+// Admin actions
+requests
+| where timestamp > ago(30d)
+| where name startswith "POST /api/admin"
+| extend userId = tostring(customDimensions["userId"])
+| project 
+    timestamp,
+    name,
+    userId,
+    resultCode,
+    customDimensions
+| order by timestamp desc
+

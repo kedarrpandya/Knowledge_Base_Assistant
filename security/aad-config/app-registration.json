@@ -1,0 +1,111 @@
+{
+  "name": "Enterprise Knowledge Assistant API",
+  "description": "Azure AD App Registration for Knowledge Assistant Backend API",
+  "signInAudience": "AzureADMyOrg",
+  "requiredResourceAccess": [
+    {
+      "resourceAppId": "00000003-0000-0000-c000-000000000000",
+      "resourceAccess": [
+        {
+          "id": "e1fe6dd8-ba31-4d61-89e7-88639da4683d",
+          "type": "Scope",
+          "value": "User.Read"
+        },
+        {
+          "id": "64a6cdd6-aab1-4aaf-94b8-3cc8405e90d0",
+          "type": "Scope",
+          "value": "email"
+        },
+        {
+          "id": "14dad69e-099b-42c9-810b-d002981feec1",
+          "type": "Scope",
+          "value": "profile"
+        }
+      ]
+    }
+  ],
+  "api": {
+    "oauth2PermissionScopes": [
+      {
+        "adminConsentDescription": "Allows the app to query the knowledge base on behalf of the signed-in user",
+        "adminConsentDisplayName": "Query knowledge base",
+        "id": "unique-guid-1",
+        "isEnabled": true,
+        "type": "User",
+        "userConsentDescription": "Allows the app to query the knowledge base on your behalf",
+        "userConsentDisplayName": "Query knowledge base",
+        "value": "Query.Read"
+      },
+      {
+        "adminConsentDescription": "Allows the app to submit feedback on behalf of the signed-in user",
+        "adminConsentDisplayName": "Submit feedback",
+        "id": "unique-guid-2",
+        "isEnabled": true,
+        "type": "User",
+        "userConsentDescription": "Allows the app to submit feedback on your behalf",
+        "userConsentDisplayName": "Submit feedback",
+        "value": "Feedback.Write"
+      },
+      {
+        "adminConsentDescription": "Allows the app to access admin functions",
+        "adminConsentDisplayName": "Access admin functions",
+        "id": "unique-guid-3",
+        "isEnabled": true,
+        "type": "Admin",
+        "userConsentDescription": null,
+        "userConsentDisplayName": null,
+        "value": "Admin.All"
+      }
+    ]
+  },
+  "appRoles": [
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Administrators have full access to all features",
+      "displayName": "Administrator",
+      "id": "unique-guid-4",
+      "isEnabled": true,
+      "value": "Admin"
+    },
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Knowledge managers can manage documents and content",
+      "displayName": "Knowledge Manager",
+      "id": "unique-guid-5",
+      "isEnabled": true,
+      "value": "KnowledgeManager"
+    },
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Analysts can view analytics and reports",
+      "displayName": "Analyst",
+      "id": "unique-guid-6",
+      "isEnabled": true,
+      "value": "Analyst"
+    },
+    {
+      "allowedMemberTypes": ["User"],
+      "description": "Standard users can query the knowledge base",
+      "displayName": "User",
+      "id": "unique-guid-7",
+      "isEnabled": true,
+      "value": "User"
+    }
+  ],
+  "web": {
+    "redirectUris": [
+      "https://your-api.azurewebsites.net/auth/callback",
+      "https://localhost:3000/auth/callback"
+    ],
+    "implicitGrantSettings": {
+      "enableIdTokenIssuance": false,
+      "enableAccessTokenIssuance": false
+    }
+  },
+  "publicClient": {
+    "redirectUris": []
+  },
+  "identifierUris": ["api://knowledge-assistant"],
+  "notes": "This app registration is used for the Knowledge Assistant backend API authentication and authorization."
+}
+

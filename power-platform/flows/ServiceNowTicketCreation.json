@@ -1,0 +1,221 @@
+{
+  "name": "Knowledge Assistant - Create ServiceNow Ticket",
+  "description": "Power Automate flow to create ServiceNow tickets from bot escalations",
+  "version": "1.0",
+  "trigger": {
+    "type": "PowerVirtualAgents",
+    "name": "When Power Virtual Agents calls a flow",
+    "inputs": [
+      {
+        "name": "userId",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "userName",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "userEmail",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "issue",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "conversationId",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "priority",
+        "type": "string",
+        "required": false,
+        "default": "Medium"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "get-user-details",
+      "name": "Get User Details from Azure AD",
+      "type": "Office365Users.GetUserProfile_V2",
+      "inputs": {
+        "userId": "@triggerBody()['userId']"
+      },
+      "runAfter": {}
+    },
+    {
+      "id": "create-ticket",
+      "name": "Create ServiceNow Incident",
+      "type": "ServiceNow.CreateRecord",
+      "inputs": {
+        "table": "incident",
+        "short_description": "Knowledge Assistant Escalation - @{triggerBody()['issue']}",
+        "description": "User @{outputs('get-user-details')?['body/displayName']} (@{outputs('get-user-details')?['body/mail']}) has escalated from the Knowledge Assistant bot.\n\nOriginal Question: @{triggerBody()['issue']}\n\nConversation ID: @{triggerBody()['conversationId']}\n\nPlease follow up with the user.",
+        "caller_id": "@{outputs('get-user-details')?['body/mail']}",
+        "priority": "@{if(equals(triggerBody()['priority'], 'High'), '2', if(equals(triggerBody()['priority'], 'Low'), '4', '3'))}",
+        "category": "Inquiry / Help",
+        "subcategory": "Knowledge Assistant",
+        "assignment_group": "IT Support",
+        "contact_type": "Bot Escalation"
+      },
+      "runAfter": {
+        "get-user-details": ["Succeeded"]
+      }
+    },
+    {
+      "id": "send-notification-email",
+      "name": "Send Confirmation Email to User",
+      "type": "Office365.SendEmailV2",
+      "inputs": {
+        "To": "@{outputs('get-user-details')?['body/mail']}",
+        "Subject": "Support Ticket Created - @{outputs('create-ticket')?['body/number']}",
+        "Body": "<p>Hello @{outputs('get-user-details')?['body/displayName']},</p><p>Your support request has been received and a ticket has been created.</p><p><strong>Ticket Number:</strong> @{outputs('create-ticket')?['body/number']}</p><p><strong>Subject:</strong> @{outputs('create-ticket')?['body/short_description']}</p><p><strong>Priority:</strong> @{triggerBody()['priority']}</p><p>A support team member will contact you within 2 business hours.</p><p>You can track your ticket status in the ServiceNow portal.</p><p>Best regards,<br/>IT Support Team</p>",
+        "Importance": "Normal"
+      },
+      "runAfter": {
+        "create-ticket": ["Succeeded"]
+      }
+    },
+    {
+      "id": "post-to-teams",
+      "name": "Post Notification to Support Teams Channel",
+      "type": "Teams.PostMessageV3",
+      "inputs": {
+        "teamId": "@{parameters('supportTeamId')}",
+        "channelId": "@{parameters('supportChannelId')}",
+        "messageBody": {
+          "type": "AdaptiveCard",
+          "version": "1.4",
+          "body": [
+            {
+              "type": "TextBlock",
+              "text": "New Bot Escalation",
+              "weight": "bolder",
+              "size": "medium"
+            },
+            {
+              "type": "FactSet",
+              "facts": [
+                {
+                  "title": "Ticket Number:",
+                  "value": "@{outputs('create-ticket')?['body/number']}"
+                },
+                {
+                  "title": "User:",
+                  "value": "@{outputs('get-user-details')?['body/displayName']}"
+                },
+                {
+                  "title": "Priority:",
+                  "value": "@{triggerBody()['priority']}"
+                },
+                {
+                  "title": "Issue:",
+                  "value": "@{triggerBody()['issue']}"
+                }
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "Action.OpenUrl",
+              "title": "Open Ticket",
+              "url": "@{parameters('serviceNowUrl')}/nav_to.do?uri=incident.do?sysparm_query=number=@{outputs('create-ticket')?['body/number']}"
+            }
+          ]
+        }
+      },
+      "runAfter": {
+        "send-notification-email": ["Succeeded"]
+      }
+    },
+    {
+      "id": "log-to-app-insights",
+      "name": "Log Event to Application Insights",
+      "type": "HTTP",
+      "inputs": {
+        "method": "POST",
+        "uri": "@{parameters('appInsightsEndpoint')}",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "BotEscalation",
+          "properties": {
+            "userId": "@{triggerBody()['userId']}",
+            "userName": "@{triggerBody()['userName']}",
+            "issue": "@{triggerBody()['issue']}",
+            "ticketNumber": "@{outputs('create-ticket')?['body/number']}",
+            "conversationId": "@{triggerBody()['conversationId']}",
+            "timestamp": "@{utcNow()}"
+          }
+        }
+      },
+      "runAfter": {
+        "post-to-teams": ["Succeeded"]
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "name": "ticketId",
+      "type": "string",
+      "value": "@{outputs('create-ticket')?['body/sys_id']}"
+    },
+    {
+      "name": "ticketNumber",
+      "type": "string",
+      "value": "@{outputs('create-ticket')?['body/number']}"
+    },
+    {
+      "name": "ticketUrl",
+      "type": "string",
+      "value": "@{parameters('serviceNowUrl')}/nav_to.do?uri=incident.do?sysparm_query=number=@{outputs('create-ticket')?['body/number']}"
+    },
+    {
+      "name": "success",
+      "type": "boolean",
+      "value": true
+    }
+  ],
+  "parameters": {
+    "supportTeamId": {
+      "type": "string",
+      "description": "Microsoft Teams team ID for support channel"
+    },
+    "supportChannelId": {
+      "type": "string",
+      "description": "Microsoft Teams channel ID for notifications"
+    },
+    "serviceNowUrl": {
+      "type": "string",
+      "description": "ServiceNow instance URL"
+    },
+    "appInsightsEndpoint": {
+      "type": "string",
+      "description": "Application Insights API endpoint"
+    }
+  },
+  "errorHandling": {
+    "scope": "flow",
+    "actions": [
+      {
+        "id": "send-error-notification",
+        "name": "Send Error Notification",
+        "type": "Office365.SendEmailV2",
+        "inputs": {
+          "To": "platform-team@company.com",
+          "Subject": "Power Automate Flow Error - ServiceNow Ticket Creation",
+          "Body": "<p>An error occurred in the ServiceNow ticket creation flow.</p><p><strong>Error:</strong> @{body('create-ticket')?['error']?['message']}</p><p><strong>User:</strong> @{triggerBody()['userName']}</p><p><strong>Conversation ID:</strong> @{triggerBody()['conversationId']}</p>",
+          "Importance": "High"
+        }
+      }
+    ]
+  }
+}
+

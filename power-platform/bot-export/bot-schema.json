@@ -1,0 +1,249 @@
+{
+  "name": "Enterprise Knowledge Assistant",
+  "description": "AI-powered bot for enterprise knowledge queries using Azure OpenAI RAG",
+  "language": "en-US",
+  "schemaVersion": "1.0",
+  "topics": [
+    {
+      "id": "greeting",
+      "name": "Greeting",
+      "triggerPhrases": [
+        "hello",
+        "hi",
+        "hey",
+        "help",
+        "start",
+        "good morning",
+        "good afternoon"
+      ],
+      "nodes": [
+        {
+          "id": "node1",
+          "type": "message",
+          "content": "Hello! I'm your Enterprise Knowledge Assistant. I can help you find information from our company knowledge base. What would you like to know?"
+        },
+        {
+          "id": "node2",
+          "type": "question",
+          "variable": "UserQuestion",
+          "content": "You can ask me about:",
+          "options": [
+            "HR policies and procedures",
+            "IT support and security",
+            "Financial processes",
+            "Product information",
+            "Or type your own question"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "knowledge-query",
+      "name": "Knowledge Query",
+      "triggerPhrases": [
+        "I have a question",
+        "help me find",
+        "tell me about",
+        "what is",
+        "how do I",
+        "where can I find",
+        "show me information about"
+      ],
+      "nodes": [
+        {
+          "id": "capture-question",
+          "type": "question",
+          "variable": "UserQuestion",
+          "content": "What would you like to know?"
+        },
+        {
+          "id": "show-thinking",
+          "type": "message",
+          "content": "Let me search our knowledge base for you..."
+        },
+        {
+          "id": "call-api",
+          "type": "action",
+          "connector": "KnowledgeAssistantRAGAPI",
+          "action": "QueryKnowledgeBase",
+          "inputs": {
+            "question": "@{variables('UserQuestion')}",
+            "sessionId": "@{conversation.id}"
+          },
+          "outputs": {
+            "Answer": "answer",
+            "Sources": "sources",
+            "Confidence": "confidence"
+          }
+        },
+        {
+          "id": "show-answer",
+          "type": "message",
+          "content": "@{variables('Answer')}"
+        },
+        {
+          "id": "show-sources",
+          "type": "adaptive-card",
+          "content": {
+            "type": "AdaptiveCard",
+            "version": "1.4",
+            "body": [
+              {
+                "type": "TextBlock",
+                "text": "Sources:",
+                "weight": "bolder"
+              },
+              {
+                "type": "Container",
+                "items": "@{variables('Sources')}"
+              }
+            ]
+          }
+        },
+        {
+          "id": "ask-helpful",
+          "type": "question",
+          "variable": "WasHelpful",
+          "content": "Was this answer helpful?",
+          "options": ["Yes", "No"]
+        },
+        {
+          "id": "handle-feedback",
+          "type": "branch",
+          "condition": "@{variables('WasHelpful')} == 'Yes'",
+          "ifTrue": {
+            "type": "message",
+            "content": "Great! I'm glad I could help. Is there anything else you'd like to know?"
+          },
+          "ifFalse": {
+            "type": "message",
+            "content": "I'm sorry the answer wasn't helpful. Would you like to talk to a human agent or rephrase your question?"
+          }
+        }
+      ]
+    },
+    {
+      "id": "escalation",
+      "name": "Escalation to Human Agent",
+      "triggerPhrases": [
+        "talk to agent",
+        "speak to human",
+        "escalate",
+        "I need help from a person",
+        "this isn't working"
+      ],
+      "nodes": [
+        {
+          "id": "confirm-escalation",
+          "type": "question",
+          "variable": "ConfirmEscalation",
+          "content": "I understand you'd like to speak with a human agent. Would you like me to create a support ticket?",
+          "options": ["Yes, create a ticket", "No, let me try again"]
+        },
+        {
+          "id": "create-ticket",
+          "type": "action",
+          "connector": "PowerAutomate",
+          "flow": "CreateSupportTicket",
+          "inputs": {
+            "userId": "@{user.id}",
+            "userName": "@{user.name}",
+            "issue": "@{variables('UserQuestion')}",
+            "conversationId": "@{conversation.id}"
+          }
+        },
+        {
+          "id": "confirm-ticket",
+          "type": "message",
+          "content": "I've created a support ticket for you. A team member will contact you within 2 business hours. Your ticket ID is: @{outputs('create-ticket').ticketId}"
+        }
+      ]
+    },
+    {
+      "id": "feedback",
+      "name": "Collect Feedback",
+      "triggerPhrases": [
+        "provide feedback",
+        "rate answer",
+        "not helpful",
+        "give feedback"
+      ],
+      "nodes": [
+        {
+          "id": "ask-rating",
+          "type": "question",
+          "variable": "Rating",
+          "content": "How would you rate your experience? (1-5, where 5 is excellent)",
+          "validation": {
+            "type": "number",
+            "min": 1,
+            "max": 5
+          }
+        },
+        {
+          "id": "ask-comment",
+          "type": "question",
+          "variable": "Comment",
+          "content": "Would you like to provide any additional comments? (Optional)",
+          "optional": true
+        },
+        {
+          "id": "submit-feedback",
+          "type": "action",
+          "connector": "KnowledgeAssistantRAGAPI",
+          "action": "SubmitFeedback",
+          "inputs": {
+            "questionId": "@{conversation.lastQuestionId}",
+            "rating": "@{variables('Rating')}",
+            "comment": "@{variables('Comment')}",
+            "helpful": "@{if(greater(variables('Rating'), 3), true, false)}"
+          }
+        },
+        {
+          "id": "thank-user",
+          "type": "message",
+          "content": "Thank you for your feedback! It helps us improve the knowledge assistant."
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "name": "Fallback",
+      "description": "Handles unrecognized inputs",
+      "nodes": [
+        {
+          "id": "fallback-message",
+          "type": "message",
+          "content": "I'm not sure I understand. Could you rephrase your question or try asking something else?"
+        },
+        {
+          "id": "offer-help",
+          "type": "question",
+          "variable": "NeedHelp",
+          "content": "Would you like some suggestions on what I can help with?",
+          "options": ["Yes", "No", "Talk to an agent"]
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "handoffToAgent": {
+      "enabled": true,
+      "provider": "Power Automate"
+    },
+    "authentication": {
+      "enabled": true,
+      "type": "Azure Active Directory",
+      "requireAuthForAllTopics": false
+    },
+    "analytics": {
+      "enabled": true,
+      "applicationInsights": true
+    },
+    "nlpSettings": {
+      "confidenceThreshold": 0.7,
+      "maxSuggestedPhrases": 3
+    }
+  }
+}
+

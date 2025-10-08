@@ -1,0 +1,36 @@
+{
+  "name": "knowledge-assistant-backend-local",
+  "version": "1.0.0",
+  "description": "Local development setup - NO AZURE REQUIRED",
+  "main": "src/index-local.ts",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/index-local.ts",
+    "start": "ts-node src/index-local.ts",
+    "load-data": "ts-node scripts/load-local-data.ts",
+    "test": "echo 'Local testing...' && curl http://localhost:3000/health"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "ollama": "^0.5.0",
+    "@qdrant/js-client-rest": "^1.8.2",
+    "joi": "^17.11.0",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.5",
+    "@types/cors": "^2.8.17",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2",
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+

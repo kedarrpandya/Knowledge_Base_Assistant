@@ -1,0 +1,138 @@
+{
+  "displayName": "Knowledge Assistant DLP Policy",
+  "description": "Data Loss Prevention policy for Enterprise Knowledge Assistant",
+  "environments": ["*"],
+  "connectorGroups": {
+    "business": {
+      "classification": "Business",
+      "connectors": [
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_custom-knowledge-assistant-api",
+          "name": "Knowledge Assistant RAG API",
+          "type": "Custom"
+        },
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_office365users",
+          "name": "Office 365 Users",
+          "type": "Microsoft"
+        },
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+          "name": "Office 365 Outlook",
+          "type": "Microsoft"
+        },
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_teams",
+          "name": "Microsoft Teams",
+          "type": "Microsoft"
+        },
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+          "name": "SharePoint Online",
+          "type": "Microsoft"
+        },
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
+          "name": "Azure Blob Storage",
+          "type": "Microsoft"
+        }
+      ]
+    },
+    "nonBusiness": {
+      "classification": "Non-Business",
+      "connectors": [
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_twitter",
+          "name": "Twitter",
+          "type": "ThirdParty"
+        },
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_facebook",
+          "name": "Facebook",
+          "type": "ThirdParty"
+        },
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_googledrive",
+          "name": "Google Drive",
+          "type": "ThirdParty"
+        },
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_dropbox",
+          "name": "Dropbox",
+          "type": "ThirdParty"
+        }
+      ]
+    },
+    "blocked": {
+      "classification": "Blocked",
+      "connectors": [
+        {
+          "id": "/providers/Microsoft.PowerApps/apis/shared_sql",
+          "name": "SQL Server (unless approved)",
+          "type": "Microsoft"
+        }
+      ]
+    }
+  },
+  "rules": [
+    {
+      "name": "Restrict data sharing with non-business connectors",
+      "description": "Prevent data from business connectors being shared with non-business connectors",
+      "action": "Block",
+      "fromGroup": "business",
+      "toGroup": "nonBusiness"
+    },
+    {
+      "name": "Block all connections to blocked connectors",
+      "description": "Block all connections to explicitly blocked connectors",
+      "action": "Block",
+      "fromGroup": "*",
+      "toGroup": "blocked"
+    }
+  ],
+  "dataLossPreventionSettings": {
+    "enableConnectorClassification": true,
+    "enableHttpsConnectorEnforcement": true,
+    "enableIpAddressFiltering": false,
+    "allowedIpRanges": []
+  },
+  "enforcement": {
+    "level": "EnvironmentLevel",
+    "exemptions": {
+      "users": [],
+      "groups": [],
+      "applications": []
+    }
+  },
+  "monitoring": {
+    "enableAuditing": true,
+    "auditEvents": [
+      "PolicyViolation",
+      "ConnectorUsage",
+      "DataExfiltration"
+    ],
+    "alertContacts": [
+      "compliance-team@company.com",
+      "security-team@company.com"
+    ]
+  },
+  "compliance": {
+    "gdprCompliant": true,
+    "hipaaCompliant": false,
+    "soc2Compliant": true,
+    "dataResidency": "US",
+    "retentionPolicy": {
+      "auditLogs": "365 days",
+      "userData": "As per user consent",
+      "analyticsData": "90 days"
+    }
+  },
+  "notes": [
+    "This policy ensures that business data from the Knowledge Assistant stays within approved Microsoft 365 services",
+    "External connectors are blocked by default",
+    "Any exceptions require approval from the security team",
+    "Policy is enforced at the environment level",
+    "Review and update quarterly"
+  ]
+}
+

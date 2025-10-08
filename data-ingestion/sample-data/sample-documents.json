@@ -1,0 +1,63 @@
+[
+  {
+    "id": "sample-001",
+    "title": "Employee Onboarding Guide",
+    "content": "Welcome to the company! This comprehensive guide will help you navigate your first days and weeks with us. Our onboarding process is designed to ensure you have all the tools, knowledge, and support needed to succeed in your new role. First Week: During your first week, you'll meet with your manager to discuss your role, responsibilities, and goals. You'll also attend orientation sessions covering company policies, benefits, IT setup, and workplace safety. Second Week: Begin working on initial projects with guidance from your team lead. Attend department-specific training sessions. Third Week: Start taking ownership of assigned tasks and projects. Schedule one-on-one meetings with key stakeholders. Resources: Employee Handbook, IT Support Portal, Benefits Portal, Learning Management System.",
+    "metadata": {
+      "category": "HR",
+      "department": "Human Resources",
+      "lastUpdated": "2024-01-15",
+      "author": "HR Team",
+      "keywords": ["onboarding", "new employee", "orientation"]
+    }
+  },
+  {
+    "id": "sample-002",
+    "title": "IT Security Best Practices",
+    "content": "Information security is everyone's responsibility. This document outlines the essential security practices all employees must follow. Password Management: Use strong, unique passwords for each system. Enable multi-factor authentication (MFA) wherever possible. Never share your credentials. Change passwords every 90 days. Data Protection: Classify data according to company guidelines (Public, Internal, Confidential, Restricted). Encrypt sensitive data at rest and in transit. Only share data with authorized personnel. Device Security: Keep your devices updated with the latest security patches. Use approved antivirus software. Lock your screen when away from your desk. Report lost or stolen devices immediately. Email Security: Be cautious of phishing attempts. Verify sender identity before clicking links or downloading attachments. Report suspicious emails to IT Security. Incident Response: If you suspect a security incident, contact IT Security immediately at security@company.com or extension 5000. Do not attempt to investigate on your own.",
+    "metadata": {
+      "category": "IT",
+      "department": "Information Technology",
+      "lastUpdated": "2024-02-10",
+      "author": "IT Security Team",
+      "keywords": ["security", "IT", "best practices", "cybersecurity"]
+    }
+  },
+  {
+    "id": "sample-003",
+    "title": "Expense Reimbursement Policy",
+    "content": "This policy governs the reimbursement of business expenses incurred by employees. Eligible Expenses: Travel (airfare, lodging, ground transportation), Meals during business travel, Client entertainment (with prior approval), Office supplies and equipment (with manager approval), Professional development and training. Submission Process: Submit expense reports within 30 days of incurring the expense using the Finance Portal. Attach all receipts for expenses over $25. Provide business justification for each expense. Manager approval required before submission. Reimbursement Timeline: Approved expenses will be reimbursed within 10 business days via direct deposit. Non-Reimbursable Expenses: Personal items, Alcoholic beverages (unless client entertainment), Entertainment without business purpose, First-class airfare (except for flights over 6 hours), Expenses without proper documentation. Questions: Contact the Finance team at finance@company.com or extension 3000.",
+    "metadata": {
+      "category": "Finance",
+      "department": "Finance",
+      "lastUpdated": "2024-01-20",
+      "author": "Finance Team",
+      "keywords": ["expenses", "reimbursement", "travel", "policy"]
+    }
+  },
+  {
+    "id": "sample-004",
+    "title": "Product Launch Checklist",
+    "content": "This checklist ensures all teams are aligned and prepared for a successful product launch. Pre-Launch (4-6 weeks before): Define product positioning and key messages. Identify target customer segments. Develop marketing materials (website copy, brochures, presentations). Create product documentation and user guides. Train sales and customer support teams. Set up analytics and tracking. Prepare FAQ and support resources. Pre-Launch (2 weeks before): Finalize all marketing assets. Conduct internal launch readiness review. Brief executives and key stakeholders. Prepare press release and media kit. Schedule launch day activities. Launch Day: Publish website updates and marketing materials. Send launch announcement to customers and prospects. Activate paid advertising campaigns. Monitor social media and respond to questions. Track key metrics and performance indicators. Post-Launch (First Week): Gather customer feedback. Monitor support tickets and common issues. Analyze launch metrics and performance. Conduct post-launch retrospective. Plan follow-up marketing activities. Resources: Product Marketing Portal, Launch Calendar, Sales Enablement Materials.",
+    "metadata": {
+      "category": "Product",
+      "department": "Product Management",
+      "lastUpdated": "2024-02-01",
+      "author": "Product Team",
+      "keywords": ["product launch", "checklist", "marketing", "go-to-market"]
+    }
+  },
+  {
+    "id": "sample-005",
+    "title": "Customer Support Escalation Process",
+    "content": "This document outlines the process for escalating customer issues to ensure timely resolution. Tier 1 Support: First point of contact for all customer inquiries. Resolve common issues using knowledge base and standard procedures. Document all interactions in CRM system. Escalate to Tier 2 if unable to resolve within 2 hours or if customer requests. Tier 2 Support: Handle complex technical issues. Access to additional diagnostic tools and resources. Collaborate with engineering team as needed. Escalate to Tier 3 for critical system issues or bugs. Target resolution time: 24 hours. Tier 3 Support (Engineering): Address product bugs and system-level issues. Provide hotfixes or workarounds. Update product roadmap based on recurring issues. Escalation Criteria: Severity 1 (Critical): System down, major functionality broken, affects multiple customers. Response time: 15 minutes. Update frequency: Every hour. Severity 2 (High): Significant functionality impaired, workaround available. Response time: 2 hours. Update frequency: Every 4 hours. Severity 3 (Medium): Minor functionality issue, limited customer impact. Response time: 8 hours. Severity 4 (Low): Enhancement request or cosmetic issue. Addressed in normal development cycle. Communication: Keep customer informed at each escalation level. Provide estimated resolution time. Follow up after issue resolution to ensure satisfaction.",
+    "metadata": {
+      "category": "Support",
+      "department": "Customer Support",
+      "lastUpdated": "2024-02-05",
+      "author": "Support Team Lead",
+      "keywords": ["support", "escalation", "customer service", "SLA"]
+    }
+  }
+]
+

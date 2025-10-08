@@ -1,0 +1,345 @@
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - backend/*
+      - infrastructure/*
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - backend/*
+      - infrastructure/*
+
+variables:
+  - group: knowledge-assistant-vars
+  - name: vmImageName
+    value: 'ubuntu-latest'
+  - name: nodeVersion
+    value: '18.x'
+
+stages:
+  - stage: Build
+    displayName: 'Build and Test'
+    jobs:
+      - job: BackendBuild
+        displayName: 'Build Backend API'
+        pool:
+          vmImage: $(vmImageName)
+        
+        steps:
+          - task: NodeTool@0
+            displayName: 'Install Node.js'
+            inputs:
+              versionSpec: $(nodeVersion)
+
+          - task: Npm@1
+            displayName: 'npm install'
+            inputs:
+              command: 'ci'
+              workingDir: 'backend'
+
+          - task: Npm@1
+            displayName: 'npm lint'
+            inputs:
+              command: 'custom'
+              customCommand: 'run lint'
+              workingDir: 'backend'
+
+          - task: Npm@1
+            displayName: 'npm test'
+            inputs:
+              command: 'custom'
+              customCommand: 'test'
+              workingDir: 'backend'
+            env:
+              NODE_ENV: test
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results'
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/test-results.xml'
+              searchFolder: 'backend'
+              mergeTestResults: true
+              testRunTitle: 'Backend Unit Tests'
+
+          - task: PublishCodeCoverageResults@1
+            displayName: 'Publish Code Coverage'
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: 'backend/coverage/cobertura-coverage.xml'
+              reportDirectory: 'backend/coverage'
+
+          - task: Npm@1
+            displayName: 'npm build'
+            inputs:
+              command: 'custom'
+              customCommand: 'run build'
+              workingDir: 'backend'
+
+          - task: ArchiveFiles@2
+            displayName: 'Archive backend files'
+            inputs:
+              rootFolderOrFile: 'backend'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/backend-$(Build.BuildId).zip'
+              replaceExistingArchive: true
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Backend Artifact'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/backend-$(Build.BuildId).zip'
+              artifact: 'backend'
+              publishLocation: 'pipeline'
+
+  - stage: DeployStaging
+    displayName: 'Deploy to Staging'
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    jobs:
+      - deployment: DeployBackendStaging
+        displayName: 'Deploy Backend to Staging'
+        environment: 'staging'
+        pool:
+          vmImage: $(vmImageName)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Azure Web App'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appType: 'webAppLinux'
+                    appName: '$(webAppNameStaging)'
+                    package: '$(Pipeline.Workspace)/backend/backend-$(Build.BuildId).zip'
+                    runtimeStack: 'NODE|18-lts'
+                    startUpCommand: 'node dist/index.js'
+
+                - task: AzureAppServiceSettings@1
+                  displayName: 'Configure App Settings'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appName: '$(webAppNameStaging)'
+                    resourceGroupName: '$(resourceGroupStaging)'
+                    appSettings: |
+                      [
+                        {
+                          "name": "AZURE_OPENAI_ENDPOINT",
+                          "value": "$(azureOpenAIEndpointStaging)",
+                          "slotSetting": false
+                        },
+                        {
+                          "name": "AZURE_SEARCH_ENDPOINT",
+                          "value": "$(azureSearchEndpointStaging)",
+                          "slotSetting": false
+                        },
+                        {
+                          "name": "NODE_ENV",
+                          "value": "production",
+                          "slotSetting": false
+                        }
+                      ]
+
+                - task: Bash@3
+                  displayName: 'Health Check'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      sleep 30
+                      response=$(curl -s -o /dev/null -w "%{http_code}" https://$(webAppNameStaging).azurewebsites.net/health)
+                      if [ $response -eq 200 ]; then
+                        echo "Health check passed"
+                      else
+                        echo "Health check failed with status $response"
+                        exit 1
+                      fi
+
+      - job: IntegrationTestsStaging
+        displayName: 'Integration Tests - Staging'
+        dependsOn: DeployBackendStaging
+        pool:
+          vmImage: $(vmImageName)
+        
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: $(nodeVersion)
+
+          - task: Npm@1
+            displayName: 'npm install'
+            inputs:
+              command: 'ci'
+              workingDir: 'backend'
+
+          - task: Npm@1
+            displayName: 'Run Integration Tests'
+            inputs:
+              command: 'custom'
+              customCommand: 'run test:integration'
+              workingDir: 'backend'
+            env:
+              API_BASE_URL: https://$(webAppNameStaging).azurewebsites.net
+              TEST_AUTH_TOKEN: $(testAuthTokenStaging)
+
+  - stage: DeployProduction
+    displayName: 'Deploy to Production'
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployBackendProduction
+        displayName: 'Deploy Backend to Production'
+        environment: 'production'
+        pool:
+          vmImage: $(vmImageName)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Azure Web App Staging Slot'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appType: 'webAppLinux'
+                    appName: '$(webAppNameProduction)'
+                    package: '$(Pipeline.Workspace)/backend/backend-$(Build.BuildId).zip'
+                    deployToSlotOrASE: true
+                    resourceGroupName: '$(resourceGroupProduction)'
+                    slotName: 'staging'
+                    runtimeStack: 'NODE|18-lts'
+                    startUpCommand: 'node dist/index.js'
+
+                - task: AzureAppServiceSettings@1
+                  displayName: 'Configure App Settings'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appName: '$(webAppNameProduction)'
+                    resourceGroupName: '$(resourceGroupProduction)'
+                    slotName: 'staging'
+                    appSettings: |
+                      [
+                        {
+                          "name": "AZURE_OPENAI_ENDPOINT",
+                          "value": "$(azureOpenAIEndpointProduction)",
+                          "slotSetting": false
+                        },
+                        {
+                          "name": "AZURE_SEARCH_ENDPOINT",
+                          "value": "$(azureSearchEndpointProduction)",
+                          "slotSetting": false
+                        },
+                        {
+                          "name": "NODE_ENV",
+                          "value": "production",
+                          "slotSetting": false
+                        }
+                      ]
+
+                - task: Bash@3
+                  displayName: 'Smoke Test Staging Slot'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      sleep 30
+                      response=$(curl -s -o /dev/null -w "%{http_code}" https://$(webAppNameProduction)-staging.azurewebsites.net/health)
+                      if [ $response -eq 200 ]; then
+                        echo "Smoke test passed"
+                      else
+                        echo "Smoke test failed with status $response"
+                        exit 1
+                      fi
+
+                - task: AzureAppServiceManage@0
+                  displayName: 'Swap Slots'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    action: 'Swap Slots'
+                    webAppName: '$(webAppNameProduction)'
+                    resourceGroupName: '$(resourceGroupProduction)'
+                    sourceSlot: 'staging'
+                    targetSlot: 'production'
+
+                - task: Bash@3
+                  displayName: 'Production Health Check'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      sleep 30
+                      response=$(curl -s -o /dev/null -w "%{http_code}" https://$(webAppNameProduction).azurewebsites.net/health)
+                      if [ $response -eq 200 ]; then
+                        echo "Production health check passed"
+                      else
+                        echo "Production health check failed with status $response"
+                        exit 1
+                      fi
+
+      - job: LoadTestProduction
+        displayName: 'Load Tests - Production'
+        dependsOn: DeployBackendProduction
+        condition: succeeded()
+        pool:
+          vmImage: $(vmImageName)
+        
+        steps:
+          - task: Bash@3
+            displayName: 'Install k6'
+            inputs:
+              targetType: 'inline'
+              script: |
+                sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+                echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+                sudo apt-get update
+                sudo apt-get install k6
+
+          - task: Bash@3
+            displayName: 'Run Load Tests'
+            inputs:
+              targetType: 'inline'
+              script: |
+                k6 run --vus 10 --duration 2m tests/load-tests/load-test.js
+            env:
+              API_BASE_URL: https://$(webAppNameProduction).azurewebsites.net
+              AUTH_TOKEN: $(testAuthTokenProduction)
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Load Test Results'
+            inputs:
+              targetPath: 'load-test-summary.json'
+              artifact: 'load-test-results'
+              publishLocation: 'pipeline'
+
+  - stage: Notification
+    displayName: 'Notifications'
+    dependsOn:
+      - DeployStaging
+      - DeployProduction
+    condition: always()
+    jobs:
+      - job: NotifyTeam
+        displayName: 'Send Notifications'
+        pool:
+          vmImage: $(vmImageName)
+        
+        steps:
+          - task: SendEmail@1
+            displayName: 'Send Email Notification'
+            inputs:
+              To: '$(notificationEmail)'
+              From: 'azuredevops@company.com'
+              Subject: 'Knowledge Assistant Deployment - $(Build.BuildNumber)'
+              Body: |
+                Deployment Status: $(Agent.JobStatus)
+                Branch: $(Build.SourceBranchName)
+                Commit: $(Build.SourceVersion)
+                Build Number: $(Build.BuildNumber)
+                
+                View build: $(System.TeamFoundationCollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)
+
