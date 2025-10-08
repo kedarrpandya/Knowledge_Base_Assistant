@@ -48,7 +48,7 @@ export default function DocumentUpload({ isOpen, onClose }: DocumentUploadProps)
       
       if (response.data.success) {
         setTimeout(() => {
-          setIsOpen(false);
+          onClose();
           resetForm();
         }, 3000);
       }
@@ -83,7 +83,7 @@ export default function DocumentUpload({ isOpen, onClose }: DocumentUploadProps)
       
       if (response.data.success) {
         setTimeout(() => {
-          setIsOpen(false);
+          onClose();
           resetForm();
         }, 3000);
       }
