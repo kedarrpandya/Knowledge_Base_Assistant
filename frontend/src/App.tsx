@@ -93,8 +93,8 @@ function App() {
 
       {/* Main Content - Fixed layout */}
       <div className="relative z-10 h-screen flex flex-col">
-        {/* Header - No border, leftmost alignment */}
-        <header className="py-6 flex-shrink-0">
+        {/* Header - No border, leftmost alignment, higher z-index to stay above 3D */}
+        <header className="py-4 sm:py-6 flex-shrink-0 relative z-20 bg-black/30 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto px-4">
             <AnimatedLogo />
           </div>
