@@ -30,43 +30,45 @@ export default function AnimatedLogo() {
   const [scriptCycleIndex, setScriptCycleIndex] = useState(0);
   const [revealedChars, setRevealedChars] = useState<Set<number>>(new Set());
 
-  // Brain icon animation (first 2 seconds)
+  // Brain icon animation (first 1.5 seconds)
   useEffect(() => {
-    if (brainAnimating && brainCharIndex < 20) {
+    if (brainAnimating && brainCharIndex < 15) {
       const timer = setTimeout(() => {
         setBrainCharIndex(brainCharIndex + 1);
       }, 80);
       return () => clearTimeout(timer);
-    } else if (brainCharIndex >= 20) {
+    } else if (brainCharIndex >= 15) {
       setTimeout(() => {
         setBrainAnimating(false);
         setTextAnimationStarted(true);
         setActiveCharIndex(0);
-      }, 300);
+      }, 200);
     }
   }, [brainCharIndex, brainAnimating]);
 
-  // Text character animation (6 seconds total for all characters)
+  // Text character animation (4 seconds total for all characters with overlap)
   useEffect(() => {
     if (!textAnimationStarted || activeCharIndex < 0) return;
 
     if (activeCharIndex < logoText.length) {
       const char = logoText[activeCharIndex];
-      const variants = ancientVariants[char] || ['?', '?', '?', '?', '?'];
+      const variants = ancientVariants[char] || ['?', '?', '?'];
 
-      // Cycle through 5 ancient scripts (120ms each = 600ms per character)
-      if (scriptCycleIndex < 5) {
+      // Cycle through 3 ancient scripts (80ms each = 240ms)
+      if (scriptCycleIndex < 3) {
         const timer = setTimeout(() => {
           setScriptCycleIndex(scriptCycleIndex + 1);
-        }, 120);
+        }, 80);
         return () => clearTimeout(timer);
       } else {
-        // Reveal the actual character and move to next
+        // Reveal the actual character
         setRevealedChars(prev => new Set([...prev, activeCharIndex]));
+        
+        // Start next character BEFORE this one fully completes (overlap for speed)
         setTimeout(() => {
           setScriptCycleIndex(0);
           setActiveCharIndex(activeCharIndex + 1);
-        }, 100);
+        }, 80); // Start next after 80ms instead of waiting
       }
     }
   }, [textAnimationStarted, activeCharIndex, scriptCycleIndex]);
