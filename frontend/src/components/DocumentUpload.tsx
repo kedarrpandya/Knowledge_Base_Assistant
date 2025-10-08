@@ -11,8 +11,12 @@ interface UploadResponse {
   documentId?: string;
 }
 
-export default function DocumentUpload() {
-  const [isOpen, setIsOpen] = useState(false);
+interface DocumentUploadProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function DocumentUpload({ isOpen, onClose }: DocumentUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<UploadResponse | null>(null);
   
@@ -104,16 +108,6 @@ export default function DocumentUpload() {
 
   return (
     <>
-      {/* Upload Button */}
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-8 liquid-glass p-4 rounded-full shadow-2xl z-50"
-      >
-        <Upload className="w-6 h-6 text-white" />
-      </motion.button>
-
       {/* Upload Modal */}
       <AnimatePresence>
         {isOpen && (
@@ -122,14 +116,14 @@ export default function DocumentUpload() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setIsOpen(false)}
+            onClick={onClose}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="liquid-glass p-8 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="glass-strong p-8 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20"
             >
               {/* Header */}
               <div className="flex justify-between items-center mb-6">
@@ -137,12 +131,15 @@ export default function DocumentUpload() {
                   <FileText className="w-6 h-6" />
                   Add Document to Knowledge Base
                 </h2>
-                <button
-                  onClick={() => setIsOpen(false)}
+                <motion.button
+                  onClick={onClose}
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   className="p-2 hover:bg-white/10 rounded-lg transition"
                 >
                   <X className="w-5 h-5 text-white" />
-                </button>
+                </motion.button>
               </div>
 
               {/* Result Message */}
@@ -253,10 +250,13 @@ export default function DocumentUpload() {
                 {/* Buttons */}
                 <div className="flex gap-4">
                   {file ? (
-                    <button
+                    <motion.button
                       onClick={handleFileUpload}
                       disabled={uploading}
-                      className="flex-1 bg-white/20 hover:bg-white/30 disabled:bg-white/10 text-white font-medium py-3 px-6 rounded-lg transition flex items-center justify-center gap-2"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      className="flex-1 liquid-glass disabled:opacity-50 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2"
                     >
                       {uploading ? (
                         <>
@@ -269,12 +269,15 @@ export default function DocumentUpload() {
                           Upload File
                         </>
                       )}
-                    </button>
+                    </motion.button>
                   ) : (
-                    <button
+                    <motion.button
                       onClick={handleTextUpload}
                       disabled={uploading || !title || !content}
-                      className="flex-1 bg-white/20 hover:bg-white/30 disabled:bg-white/10 text-white font-medium py-3 px-6 rounded-lg transition flex items-center justify-center gap-2"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      className="flex-1 liquid-glass disabled:opacity-50 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2"
                     >
                       {uploading ? (
                         <>
@@ -287,15 +290,18 @@ export default function DocumentUpload() {
                           Add to Knowledge Base
                         </>
                       )}
-                    </button>
+                    </motion.button>
                   )}
 
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="px-6 py-3 glass hover:bg-white/10 text-white rounded-lg transition"
+                  <motion.button
+                    onClick={onClose}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    className="px-6 py-3 liquid-glass text-white rounded-lg"
                   >
                     Cancel
-                  </button>
+                  </motion.button>
                 </div>
               </div>
 

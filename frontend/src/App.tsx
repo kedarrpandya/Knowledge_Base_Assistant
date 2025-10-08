@@ -35,6 +35,7 @@ function App() {
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages change
@@ -92,49 +93,23 @@ function App() {
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Header */}
-        <motion.header
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          className="liquid-glass border-b border-white/10 backdrop-blur-xl"
-        >
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-3"
-            >
+        {/* Header - Static */}
+        <header className="py-6 border-b border-white/5">
+          <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <div className="relative">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                  className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-xl flex items-center justify-center"
-                >
-                  <Brain className="w-7 h-7 text-white" />
-                </motion.div>
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-white/60 rounded-full"
-                />
+                <div className="absolute inset-0 bg-white/60 rounded-full animate-pulse" />
+                <div className="relative bg-white/10 p-3 rounded-full">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">
-                  Knowledge Assistant
-                </h1>
-                <p className="text-xs text-gray-400">Powered by AI</p>
-              </div>
-            </motion.div>
+              <h1 className="text-2xl font-bold text-white">Knowledge Assistant</h1>
+            </div>
           </div>
-        </motion.header>
+        </header>
 
-        {/* Chat Messages */}
-        <motion.main
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="flex-1 overflow-y-auto"
-        >
+        {/* Chat Messages - Static */}
+        <main className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-4 py-8 max-w-5xl">
             {messages.map((message) => (
               <ChatMessage
@@ -148,20 +123,22 @@ function App() {
             ))}
             <div ref={messagesEndRef} />
           </div>
-        </motion.main>
+        </main>
 
-        {/* Input Area */}
-        <motion.footer
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          className="liquid-glass border-t border-white/10 backdrop-blur-xl py-6"
-        >
-          <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
-        </motion.footer>
+        {/* Input Area - Static, no full footer background */}
+        <footer className="py-6">
+          <ChatInput 
+            onSend={handleSendMessage} 
+            isLoading={isLoading}
+            onUploadClick={() => setIsUploadOpen(true)}
+          />
+        </footer>
 
-        {/* Document Upload Button */}
-        <DocumentUpload />
+        {/* Document Upload Modal */}
+        <DocumentUpload 
+          isOpen={isUploadOpen}
+          onClose={() => setIsUploadOpen(false)}
+        />
       </div>
     </div>
   );
