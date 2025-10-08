@@ -7,6 +7,7 @@ services:
     buildCommand: |
       cd backend && npm install
       npm install --prefix local/backend express helmet cors compression morgan dotenv multer groq-sdk ollama @qdrant/js-client-rest
+      npm install --prefix local/backend --save-dev @types/express @types/cors @types/compression @types/morgan @types/multer @types/node typescript
     startCommand: cd backend && npx ts-node ../local/backend/index-local.ts
     envVars:
       - key: NODE_ENV
