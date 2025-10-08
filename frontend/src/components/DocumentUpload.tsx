@@ -35,14 +35,24 @@ export default function DocumentUpload({ isOpen, onClose }: DocumentUploadProps)
     setResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      if (title) formData.append('title', title);
-      if (category) formData.append('category', category);
-      if (author) formData.append('author', author);
+      // Read file content and convert to base64
+      const fileContent = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = (reader.result as string).split(',')[1]; // Remove data URL prefix
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      const response = await axios.post(`${API_URL}/api/documents/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const response = await axios.post(`${API_URL}/api/documents/upload`, {
+        filename: file.name,
+        fileContent,
+        title: title || file.name.split('.')[0],
+        category,
+        author,
+        tags: []
       });
 
       setResult(response.data);
