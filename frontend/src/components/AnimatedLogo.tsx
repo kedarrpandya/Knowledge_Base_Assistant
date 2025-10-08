@@ -94,9 +94,9 @@ export default function AnimatedLogo() {
   ];
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2 sm:gap-3">
       {/* Animated Brain Icon */}
-      <div className="relative">
+      <div className="relative flex-shrink-0">
         <AnimatePresence mode="wait">
           {brainAnimating ? (
             <motion.div
@@ -105,7 +105,7 @@ export default function AnimatedLogo() {
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, scale: 1.5, rotate: 180 }}
               transition={{ duration: 0.15 }}
-              className="w-12 h-12 flex items-center justify-center text-2xl text-white/80"
+              className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-xl sm:text-2xl text-white/80"
             >
               {ancientScripts[brainCharIndex % ancientScripts.length]}
             </motion.div>
@@ -138,11 +138,11 @@ export default function AnimatedLogo() {
                 
                 {/* Brain Icon */}
                 <motion.div 
-                  className="relative bg-white/10 p-3 rounded-full backdrop-blur-xl"
+                  className="relative bg-white/10 p-2 sm:p-3 rounded-full backdrop-blur-xl"
                   whileHover={{ scale: 1.1, rotate: 15 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <Brain className="w-6 h-6 text-white" />
+                  <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </motion.div>
 
                 {/* Orbiting particles */}
@@ -167,8 +167,8 @@ export default function AnimatedLogo() {
       </div>
 
       {/* Animated Text - Each character cycles through ancient scripts */}
-      <div className="overflow-hidden">
-        <div className="flex">
+      <div className="overflow-hidden flex-1 min-w-0">
+        <div className="flex flex-wrap sm:flex-nowrap">
           {logoText.split('').map((char, index) => {
             const variants = ancientVariants[char] || ['?'];
             const isRevealed = revealedChars.has(index);
@@ -182,7 +182,7 @@ export default function AnimatedLogo() {
                     // Not started yet - invisible
                     <motion.span
                       key="pending"
-                      className="text-2xl font-bold text-transparent select-none"
+                      className="text-lg sm:text-xl md:text-2xl font-bold text-transparent select-none"
                     >
                       {char === ' ' ? '\u00A0' : char}
                     </motion.span>
@@ -194,7 +194,7 @@ export default function AnimatedLogo() {
                       animate={{ scale: 1, rotateY: 0 }}
                       exit={{ scale: 0.8, rotateY: 90 }}
                       transition={{ duration: 0.1, ease: "easeOut" }}
-                      className="text-2xl font-bold text-white inline-block"
+                      className="text-lg sm:text-xl md:text-2xl font-bold text-white inline-block"
                       style={{ transformStyle: 'preserve-3d' }}
                     >
                       {variants[scriptCycleIndex % variants.length]}
@@ -211,7 +211,7 @@ export default function AnimatedLogo() {
                         damping: 20,
                         duration: 0.4
                       }}
-                      className="text-2xl font-bold text-white inline-block"
+                      className="text-lg sm:text-xl md:text-2xl font-bold text-white inline-block"
                       style={{ transformStyle: 'preserve-3d' }}
                     >
                       {char === ' ' ? '\u00A0' : char}
