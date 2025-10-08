@@ -144,6 +144,9 @@ export class GroqRAGService {
     try {
       console.log(`📝 Indexing document: ${title}`);
 
+      // Ensure collection exists
+      await this.ensureCollection();
+
       await this.qdrant.upsert(this.collectionName, {
         points: [{
           id: id,
@@ -161,6 +164,24 @@ export class GroqRAGService {
     } catch (error) {
       console.error('Error indexing document:', error);
       throw error;
+    }
+  }
+
+  private async ensureCollection() {
+    try {
+      // Try to get the collection
+      await this.qdrant.getCollection(this.collectionName);
+      console.log(`✅ Collection ${this.collectionName} exists`);
+    } catch (error) {
+      // Collection doesn't exist, create it
+      console.log(`📦 Creating collection: ${this.collectionName}`);
+      await this.qdrant.createCollection(this.collectionName, {
+        vectors: {
+          size: 768,
+          distance: 'Cosine'
+        }
+      });
+      console.log(`✅ Collection ${this.collectionName} created`);
     }
   }
 
