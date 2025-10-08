@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: knowledge-assistant-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: |
+      cd backend && npm install
+      npm install --prefix local/backend express helmet cors compression morgan dotenv multer groq-sdk ollama @qdrant/js-client-rest
+    startCommand: cd backend && npx ts-node ../local/backend/index-local.ts
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: API_PORT
+        value: 10000
+
