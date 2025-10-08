@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Brain } from 'lucide-react';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 
 // Components
 import StarConstellation from './components/StarConstellation';
@@ -91,23 +92,83 @@ function App() {
       <Scene3D />
 
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Header - Static */}
-        <header className="py-6 border-b border-white/5">
-          <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+      <div className="relative z-10 h-screen flex flex-col">
+        {/* Header - Cool space animation on load */}
+        <motion.header 
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ 
+            type: "spring",
+            stiffness: 100,
+            damping: 20,
+            duration: 1.2
+          }}
+          className="py-6"
+        >
+          <div className="max-w-6xl mx-auto px-4">
+            <motion.div 
+              className="flex items-center gap-3"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 200,
+                damping: 15,
+                delay: 0.2
+              }}
+            >
+              {/* Brain Icon with orbit effect */}
               <div className="relative">
-                <div className="absolute inset-0 bg-white/60 rounded-full animate-pulse" />
-                <div className="relative bg-white/10 p-3 rounded-full">
+                <motion.div
+                  animate={{ 
+                    rotate: 360,
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{ 
+                    rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                    scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                  }}
+                  className="absolute inset-0 bg-white/60 rounded-full blur-sm"
+                />
+                <motion.div 
+                  className="relative bg-white/10 p-3 rounded-full backdrop-blur-xl"
+                  whileHover={{ scale: 1.1, rotate: 15 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
                   <Brain className="w-6 h-6 text-white" />
-                </div>
+                </motion.div>
+                
+                {/* Orbiting particles */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0"
+                >
+                  <div className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+                </motion.div>
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0"
+                >
+                  <div className="absolute bottom-0 right-0 w-1 h-1 bg-white/60 rounded-full" />
+                </motion.div>
               </div>
-              <h1 className="text-2xl font-bold text-white">Knowledge Assistant</h1>
-            </div>
+              
+              {/* Text with typewriter effect */}
+              <motion.h1 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="text-2xl font-bold text-white"
+              >
+                Knowledge Assistant
+              </motion.h1>
+            </motion.div>
           </div>
-        </header>
+        </motion.header>
 
-        {/* Chat Messages - Static */}
+        {/* Chat Messages - Scrollable area between header and input */}
         <main className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-4 py-8 max-w-5xl">
             {messages.map((message) => (
@@ -124,8 +185,8 @@ function App() {
           </div>
         </main>
 
-        {/* Input Area - Static, no full footer background */}
-        <footer className="py-6">
+        {/* Input Area - Fixed at bottom */}
+        <footer className="py-6 flex-shrink-0">
           <ChatInput 
             onSend={handleSendMessage} 
             isLoading={isLoading}
