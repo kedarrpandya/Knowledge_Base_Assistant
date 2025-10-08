@@ -2,46 +2,101 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain } from 'lucide-react';
 
-// Ancient script characters from various civilizations
-const ancientScripts = [
-  '𓂀', '𓃭', '𓄿', '𓅓', // Egyptian Hieroglyphs
-  'ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', // Norse Runes
-  '𐎀', '𐎁', '𐎂', '𐎃', // Cuneiform
-  'ॐ', 'अ', 'क', 'ग', // Sanskrit
-  '文', '字', '書', '知', // Chinese
-  'א', 'ב', 'ג', 'ד', // Hebrew
-  'Ω', 'Φ', 'Ψ', 'Σ', // Greek
-];
+// Ancient script variants for each letter (visually similar)
+const ancientVariants: Record<string, string[]> = {
+  'K': ['Κ', 'ᚲ', 'К', '𐎋', 'ક'],  // Greek Kappa, Rune, Cyrillic, Cuneiform, Gujarati
+  'n': ['η', 'ո', 'ח', 'ñ', 'ń'],  // Greek eta, Armenian, Hebrew, Spanish, Polish
+  'o': ['ο', 'օ', 'ס', 'σ', 'ο'],  // Greek omicron, Armenian, Hebrew, Greek sigma, Greek
+  'w': ['ω', 'ש', 'ψ', 'ш', 'ẃ'],  // Greek omega, Hebrew, Greek psi, Cyrillic, Welsh
+  'l': ['ι', 'ı', 'ל', 'ļ', 'ł'],  // Greek iota, Turkish, Hebrew, Latvian, Polish
+  'e': ['ε', 'є', 'ე', 'ē', 'ė'],  // Greek epsilon, Cyrillic, Georgian, Macron, Lithuanian
+  'd': ['δ', 'ծ', 'द', 'ď', 'đ'],  // Greek delta, Armenian, Devanagari, Czech, Croatian
+  'g': ['ϱ', 'ց', 'ग', 'ğ', 'ģ'],  // Greek rho, Armenian, Devanagari, Turkish, Latvian
+  'A': ['Α', 'А', 'Ա', 'अ', 'Λ'],  // Greek Alpha, Cyrillic, Armenian, Devanagari, Lambda
+  's': ['ς', 'ֆ', 'ś', 'š', 'ş'],  // Greek sigma, Armenian, Polish, Czech, Turkish
+  'i': ['ι', 'і', 'ı', 'ï', 'į'],  // Greek iota, Cyrillic, Turkish, Diaeresis, Lithuanian
+  't': ['τ', 'т', 'ե', 'ť', 'ţ'],  // Greek tau, Cyrillic, Armenian, Czech, Romanian
+  'a': ['α', 'а', 'ա', 'ä', 'å'],  // Greek alpha, Cyrillic, Armenian, Umlaut, Ring
+  ' ': [' ', ' ', ' ', ' ', ' '],  // Space remains space
+};
+
+const logoText = 'Knowledge Assistant';
 
 export default function AnimatedLogo() {
-  const [isAnimating, setIsAnimating] = useState(true);
-  const [currentChar, setCurrentChar] = useState(0);
+  const [brainAnimating, setBrainAnimating] = useState(true);
+  const [brainCharIndex, setBrainCharIndex] = useState(0);
+  const [textAnimationStarted, setTextAnimationStarted] = useState(false);
+  const [activeCharIndex, setActiveCharIndex] = useState(-1);
+  const [scriptCycleIndex, setScriptCycleIndex] = useState(0);
+  const [revealedChars, setRevealedChars] = useState<Set<number>>(new Set());
 
+  // Brain icon animation (first 2 seconds)
   useEffect(() => {
-    if (isAnimating && currentChar < 20) {
+    if (brainAnimating && brainCharIndex < 20) {
       const timer = setTimeout(() => {
-        setCurrentChar(currentChar + 1);
+        setBrainCharIndex(brainCharIndex + 1);
       }, 80);
       return () => clearTimeout(timer);
-    } else if (currentChar >= 20) {
-      setTimeout(() => setIsAnimating(false), 300);
+    } else if (brainCharIndex >= 20) {
+      setTimeout(() => {
+        setBrainAnimating(false);
+        setTextAnimationStarted(true);
+        setActiveCharIndex(0);
+      }, 300);
     }
-  }, [currentChar, isAnimating]);
+  }, [brainCharIndex, brainAnimating]);
+
+  // Text character animation (6 seconds total for all characters)
+  useEffect(() => {
+    if (!textAnimationStarted || activeCharIndex < 0) return;
+
+    if (activeCharIndex < logoText.length) {
+      const char = logoText[activeCharIndex];
+      const variants = ancientVariants[char] || ['?', '?', '?', '?', '?'];
+
+      // Cycle through 4 ancient scripts (60ms each = 240ms)
+      if (scriptCycleIndex < 4) {
+        const timer = setTimeout(() => {
+          setScriptCycleIndex(scriptCycleIndex + 1);
+        }, 60);
+        return () => clearTimeout(timer);
+      } else {
+        // Reveal the actual character and move to next
+        setRevealedChars(prev => new Set([...prev, activeCharIndex]));
+        setTimeout(() => {
+          setScriptCycleIndex(0);
+          setActiveCharIndex(activeCharIndex + 1);
+        }, 60);
+      }
+    }
+  }, [textAnimationStarted, activeCharIndex, scriptCycleIndex]);
+
+  // Get ancient scripts for cycling animation
+  const ancientScripts = [
+    '𓂀', '𓃭', '𓄿', '𓅓', // Egyptian Hieroglyphs
+    'ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', // Norse Runes
+    '𐎀', '𐎁', '𐎂', '𐎃', // Cuneiform
+    'ॐ', 'अ', 'क', 'ग', // Sanskrit
+    '文', '字', '書', '知', // Chinese
+    'א', 'ב', 'ג', 'ד', // Hebrew
+    'Ω', 'Φ', 'Ψ', 'Σ', // Greek
+  ];
 
   return (
     <div className="flex items-center gap-3">
+      {/* Animated Brain Icon */}
       <div className="relative">
         <AnimatePresence mode="wait">
-          {isAnimating ? (
+          {brainAnimating ? (
             <motion.div
-              key={currentChar}
+              key={brainCharIndex}
               initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, scale: 1.5, rotate: 180 }}
               transition={{ duration: 0.15 }}
               className="w-12 h-12 flex items-center justify-center text-2xl text-white/80"
             >
-              {ancientScripts[currentChar % ancientScripts.length]}
+              {ancientScripts[brainCharIndex % ancientScripts.length]}
             </motion.div>
           ) : (
             <motion.div
@@ -100,29 +155,63 @@ export default function AnimatedLogo() {
         </AnimatePresence>
       </div>
 
-      {/* Text with character-by-character animation */}
+      {/* Animated Text - Each character cycles through ancient scripts */}
       <div className="overflow-hidden">
         <div className="flex">
-          {'Knowledge Assistant'.split('').map((char, index) => (
-            <motion.span
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ 
-                opacity: isAnimating ? 0 : 1, 
-                y: isAnimating ? 20 : 0 
-              }}
-              transition={{ 
-                delay: isAnimating ? 0 : index * 0.05 + 0.3,
-                duration: 0.3 
-              }}
-              className="text-2xl font-bold text-white"
-            >
-              {char === ' ' ? '\u00A0' : char}
-            </motion.span>
-          ))}
+          {logoText.split('').map((char, index) => {
+            const variants = ancientVariants[char] || ['?'];
+            const isRevealed = revealedChars.has(index);
+            const isActive = activeCharIndex === index;
+            const isPending = index > activeCharIndex;
+
+            return (
+              <div key={index} className="inline-block relative" style={{ minWidth: char === ' ' ? '0.5rem' : 'auto' }}>
+                <AnimatePresence mode="wait">
+                  {isPending ? (
+                    // Not started yet - invisible
+                    <motion.span
+                      key="pending"
+                      className="text-2xl font-bold text-transparent select-none"
+                    >
+                      {char === ' ' ? '\u00A0' : char}
+                    </motion.span>
+                  ) : isActive && !isRevealed ? (
+                    // Currently cycling through ancient scripts
+                    <motion.span
+                      key={`script-${scriptCycleIndex}`}
+                      initial={{ opacity: 0, y: -20, rotateX: -90 }}
+                      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                      exit={{ opacity: 0, y: 20, rotateX: 90 }}
+                      transition={{ duration: 0.05 }}
+                      className="text-2xl font-bold text-white/70 inline-block"
+                      style={{ transformStyle: 'preserve-3d' }}
+                    >
+                      {variants[scriptCycleIndex % variants.length]}
+                    </motion.span>
+                  ) : isRevealed ? (
+                    // Final revealed character with epic animation
+                    <motion.span
+                      key="revealed"
+                      initial={{ opacity: 0, scale: 0.5, rotateY: -180, y: -20 }}
+                      animate={{ opacity: 1, scale: 1, rotateY: 0, y: 0 }}
+                      transition={{ 
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20,
+                        duration: 0.4
+                      }}
+                      className="text-2xl font-bold text-white inline-block"
+                      style={{ transformStyle: 'preserve-3d' }}
+                    >
+                      {char === ' ' ? '\u00A0' : char}
+                    </motion.span>
+                  ) : null}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 }
-
