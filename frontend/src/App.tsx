@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Brain } from 'lucide-react';
 import axios from 'axios';
 
