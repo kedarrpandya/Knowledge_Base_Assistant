@@ -1,0 +1,18 @@
+{
+  "name": "knowledge-assistant-api",
+  "version": "1.0.0",
+  "description": "Vercel serverless API for Knowledge Assistant",
+  "main": "index.ts",
+  "dependencies": {
+    "@vercel/node": "^3.0.0",
+    "groq-sdk": "^0.8.0",
+    "@qdrant/js-client-rest": "^1.8.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@types/uuid": "^9.0.7",
+    "typescript": "^5.3.3"
+  }
+}
+

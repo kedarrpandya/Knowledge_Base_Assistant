@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, X, FileText, Check, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Use relative URL for Vercel deployment (same domain) or env var for other deployments
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 interface UploadResponse {
   success: boolean;

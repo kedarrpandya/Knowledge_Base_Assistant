@@ -23,7 +23,8 @@ interface Message {
   processingTime?: number;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Use relative URL for Vercel deployment (same domain) or env var for other deployments
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([
