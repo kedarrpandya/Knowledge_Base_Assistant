@@ -5,6 +5,8 @@ import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { GroqRAGService } from './groqRagService';
+import { DocumentUploadService } from './documentUploadService';
+import multer from 'multer';
 
 // Load local environment
 dotenv.config({ path: '.env.local' });
@@ -19,8 +21,16 @@ app.use(compression());
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Initialize RAG service (GROQ = SUPER FAST!)
+// Initialize services
 const ragService = new GroqRAGService();
+const uploadService = new DocumentUploadService();
+
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 // Health check
 app.get('/health', (_req, res) => {
@@ -144,6 +154,72 @@ app.get('/api/admin/stats', async (_req, res) => {
   }
 });
 
+// Document upload endpoint (file)
+app.post('/api/documents/upload', upload.single('file'), async (req, res): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    const { title, content } = await uploadService.extractTextFromFile(
+      req.file.originalname,
+      req.file.buffer
+    );
+
+    const result = await uploadService.uploadDocument({
+      title: req.body.title || title,
+      content,
+      category: req.body.category,
+      tags: req.body.tags ? req.body.tags.split(',') : [],
+      author: req.body.author,
+      source: 'file-upload'
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Upload failed'
+    });
+  }
+});
+
+// Document upload endpoint (JSON/text)
+app.post('/api/documents', async (req, res): Promise<void> => {
+  try {
+    const result = await uploadService.uploadDocument(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error('Document upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Upload failed'
+    });
+  }
+});
+
+// List all documents
+app.get('/api/documents', async (_req, res): Promise<void> => {
+  try {
+    const result = await uploadService.listDocuments();
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to list documents' });
+  }
+});
+
+// Delete document
+app.delete('/api/documents/:id', async (req, res): Promise<void> => {
+  try {
+    const result = await uploadService.deleteDocument(req.params.id);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete document' });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
@@ -162,6 +238,7 @@ app.listen(PORT, () => {
   console.log(`   - Groq AI: ENABLED (Lightning Fast!)`);
   console.log(`   - Model: llama-3.1-8b-instant`);
   console.log(`   - Qdrant: ${process.env.QDRANT_URL}`);
+  console.log(`   - Document Upload: ENABLED`);
   console.log(`\n🧪 Test it:`);
   console.log(`   curl -X POST http://localhost:${PORT}/api/query \\`);
   console.log(`     -H "Content-Type: application/json" \\`);

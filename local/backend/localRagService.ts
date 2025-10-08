@@ -189,5 +189,51 @@ Answer:`;
       };
     }
   }
+
+  /**
+   * Delete a document from Qdrant
+   */
+  async deleteDocument(documentId: string): Promise<void> {
+    await this.qdrant.delete(this.collectionName, {
+      filter: {
+        must: [
+          {
+            key: 'id',
+            match: { value: documentId }
+          }
+        ]
+      }
+    });
+  }
+
+  /**
+   * List all documents in the collection
+   */
+  async listAllDocuments(): Promise<Array<{
+    id: string;
+    title: string;
+    category?: string;
+    uploadedAt?: string;
+    author?: string;
+  }>> {
+    try {
+      const response = await this.qdrant.scroll(this.collectionName, {
+        limit: 100,
+        with_payload: true,
+        with_vector: false
+      });
+
+      return response.points.map((point: any) => ({
+        id: String(point.id),
+        title: String(point.payload?.title || 'Untitled'),
+        category: point.payload?.metadata?.category,
+        uploadedAt: point.payload?.metadata?.uploadedAt,
+        author: point.payload?.metadata?.author
+      }));
+    } catch (error) {
+      console.error('Error listing documents:', error);
+      return [];
+    }
+  }
 }
 

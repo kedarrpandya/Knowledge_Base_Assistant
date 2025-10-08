@@ -9,6 +9,7 @@ import Scene3D from './components/Scene3D';
 import NetworkBackground from './components/NetworkBackground';
 import ChatMessage from './components/ChatMessage';
 import ChatInput from './components/ChatInput';
+import DocumentUpload from './components/DocumentUpload';
 
 interface Message {
   id: string;
@@ -158,6 +159,9 @@ function App() {
         >
           <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
         </motion.footer>
+
+        {/* Document Upload Button */}
+        <DocumentUpload />
       </div>
     </div>
   );
