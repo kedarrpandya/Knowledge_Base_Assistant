@@ -52,7 +52,16 @@ export default function AnimatedLogo() {
 
     if (activeCharIndex < logoText.length) {
       const char = logoText[activeCharIndex];
-      const variants = ancientVariants[char] || ['?', '?', '?'];
+      
+      // Handle spaces immediately
+      if (char === ' ') {
+        setRevealedChars(prev => new Set([...prev, activeCharIndex]));
+        setTimeout(() => {
+          setScriptCycleIndex(0);
+          setActiveCharIndex(activeCharIndex + 1);
+        }, 80);
+        return;
+      }
 
       // Cycle through 3 ancient scripts (80ms each = 240ms)
       if (scriptCycleIndex < 3) {
