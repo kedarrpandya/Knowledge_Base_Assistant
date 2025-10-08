@@ -54,11 +54,11 @@ export default function AnimatedLogo() {
       const char = logoText[activeCharIndex];
       const variants = ancientVariants[char] || ['?', '?', '?', '?', '?'];
 
-      // Cycle through 4 ancient scripts (60ms each = 240ms)
-      if (scriptCycleIndex < 4) {
+      // Cycle through 5 ancient scripts (120ms each = 600ms per character)
+      if (scriptCycleIndex < 5) {
         const timer = setTimeout(() => {
           setScriptCycleIndex(scriptCycleIndex + 1);
-        }, 60);
+        }, 120);
         return () => clearTimeout(timer);
       } else {
         // Reveal the actual character and move to next
@@ -66,7 +66,7 @@ export default function AnimatedLogo() {
         setTimeout(() => {
           setScriptCycleIndex(0);
           setActiveCharIndex(activeCharIndex + 1);
-        }, 60);
+        }, 100);
       }
     }
   }, [textAnimationStarted, activeCharIndex, scriptCycleIndex]);
@@ -176,14 +176,14 @@ export default function AnimatedLogo() {
                       {char === ' ' ? '\u00A0' : char}
                     </motion.span>
                   ) : isActive && !isRevealed ? (
-                    // Currently cycling through ancient scripts
+                    // Currently cycling through ancient scripts - FULLY VISIBLE
                     <motion.span
                       key={`script-${scriptCycleIndex}`}
-                      initial={{ opacity: 0, y: -20, rotateX: -90 }}
-                      animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                      exit={{ opacity: 0, y: 20, rotateX: 90 }}
-                      transition={{ duration: 0.05 }}
-                      className="text-2xl font-bold text-white/70 inline-block"
+                      initial={{ scale: 0.8, rotateY: -90 }}
+                      animate={{ scale: 1, rotateY: 0 }}
+                      exit={{ scale: 0.8, rotateY: 90 }}
+                      transition={{ duration: 0.1, ease: "easeOut" }}
+                      className="text-2xl font-bold text-white inline-block"
                       style={{ transformStyle: 'preserve-3d' }}
                     >
                       {variants[scriptCycleIndex % variants.length]}
