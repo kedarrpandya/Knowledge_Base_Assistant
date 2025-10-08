@@ -29,22 +29,31 @@ export default function AnimatedLogo() {
   const [activeCharIndex, setActiveCharIndex] = useState(-1);
   const [scriptCycleIndex, setScriptCycleIndex] = useState(0);
   const [revealedChars, setRevealedChars] = useState<Set<number>>(new Set());
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted before starting animation
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Brain icon animation (first 1.5 seconds)
   useEffect(() => {
+    if (!mounted) return;
+    
     if (brainAnimating && brainCharIndex < 15) {
       const timer = setTimeout(() => {
         setBrainCharIndex(brainCharIndex + 1);
       }, 80);
       return () => clearTimeout(timer);
     } else if (brainCharIndex >= 15) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setBrainAnimating(false);
         setTextAnimationStarted(true);
         setActiveCharIndex(0);
       }, 200);
+      return () => clearTimeout(timer);
     }
-  }, [brainCharIndex, brainAnimating]);
+  }, [brainCharIndex, brainAnimating, mounted]);
 
   // Text character animation (4 seconds total for all characters with overlap)
   useEffect(() => {
@@ -92,6 +101,27 @@ export default function AnimatedLogo() {
     'א', 'ב', 'ג', 'ד', // Hebrew
     'Ω', 'Φ', 'Ψ', 'Σ', // Greek
   ];
+
+  // Don't render until mounted to prevent hydration issues
+  if (!mounted) {
+    return (
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+          {/* Placeholder to prevent layout shift */}
+          <div className="relative">
+            <div className="relative bg-white/10 p-2 sm:p-3 rounded-full backdrop-blur-xl">
+              <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+          </div>
+        </div>
+        <div className="overflow-hidden flex-1 min-w-0">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+            Knowledge Assistant
+          </h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2 sm:gap-3">
