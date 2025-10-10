@@ -1,4 +1,4 @@
-# 🧠 Enterprise Knowledge Assistant
+#  Enterprise Knowledge Assistant - Demo: https://knowledge-assistant-v1.vercel.app/
 
 **AI-powered knowledge base with RAG (Retrieval Augmented Generation)**
 
