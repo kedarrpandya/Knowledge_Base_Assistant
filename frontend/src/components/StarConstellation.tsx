@@ -1,5 +1,5 @@
 import { useRef, useMemo, useState } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Physics, useSphere, useBox } from '@react-three/cannon';
 import * as THREE from 'three';
 
