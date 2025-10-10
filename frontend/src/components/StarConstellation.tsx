@@ -55,17 +55,20 @@ function Boundaries() {
 function StarField() {
   const meshRef = useRef<THREE.Points>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
-  const { viewport } = useThree();
 
   const [stars, lines] = useMemo(() => {
     const starCount = 600; // Increased to 600 for denser filling
     const positions = new Float32Array(starCount * 3);
     const linePositions = [];
 
+    // Use fixed dimensions to prevent buffer resize issues
+    const width = 50;
+    const height = 30;
+
     // Generate star positions with wider distribution to fill space
     for (let i = 0; i < starCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * viewport.width * 3.5;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * viewport.height * 3.5;
+      positions[i * 3] = (Math.random() - 0.5) * width;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * height;
       positions[i * 3 + 2] = (Math.random() - 0.5) * 50;
     }
 
@@ -88,7 +91,7 @@ function StarField() {
     }
 
     return [positions, new Float32Array(linePositions)];
-  }, [viewport]);
+  }, []); // Remove viewport dependency to prevent buffer recreation
 
   useFrame(({ mouse, clock }) => {
     if (meshRef.current) {
@@ -148,11 +151,28 @@ function StarField() {
   );
 }
 
-// Mouse trail effect with proper typing
+// Mouse trail effect with proper typing - FIXED buffer size issues
 function MouseTrail() {
   const lineRef = useRef<THREE.Line>(null);
   const positions = useRef<number[]>([]);
   const maxPoints = 30;
+  
+  // Pre-allocate geometry with fixed size to prevent buffer errors
+  const lineObject = useMemo(() => {
+    const geometry = new THREE.BufferGeometry();
+    const material = new THREE.LineBasicMaterial({ 
+      color: '#FFFFFF', 
+      transparent: true, 
+      opacity: 0.5 
+    });
+    
+    // Pre-allocate buffer with max size
+    const initialPositions = new Float32Array(maxPoints * 3);
+    geometry.setAttribute('position', new THREE.BufferAttribute(initialPositions, 3));
+    geometry.setDrawRange(0, 0); // Start with no visible points
+    
+    return new THREE.Line(geometry, material);
+  }, [maxPoints]);
 
   useFrame(({ mouse, viewport }) => {
     const x = (mouse.x * viewport.width) / 2;
@@ -166,31 +186,29 @@ function MouseTrail() {
       positions.current = positions.current.slice(0, maxPoints * 3);
     }
 
-    // Update geometry
+    // Update geometry with fixed buffer size
     if (lineRef.current && positions.current.length >= 6) {
       const geometry = lineRef.current.geometry as THREE.BufferGeometry;
-      geometry.setFromPoints(
-        Array.from({ length: positions.current.length / 3 }, (_, i) =>
-          new THREE.Vector3(
-            positions.current[i * 3],
-            positions.current[i * 3 + 1],
-            positions.current[i * 3 + 2]
-          )
-        )
-      );
+      const positionAttribute = geometry.getAttribute('position') as THREE.BufferAttribute;
+      
+      const pointCount = Math.min(positions.current.length / 3, maxPoints);
+      
+      // Update buffer values
+      for (let i = 0; i < pointCount; i++) {
+        positionAttribute.setXYZ(
+          i,
+          positions.current[i * 3] || 0,
+          positions.current[i * 3 + 1] || 0,
+          positions.current[i * 3 + 2] || 0
+        );
+      }
+      
+      positionAttribute.needsUpdate = true;
+      geometry.setDrawRange(0, pointCount);
     }
   });
 
-  return (
-    <primitive object={new THREE.Line(
-      new THREE.BufferGeometry(),
-      new THREE.LineBasicMaterial({ 
-        color: '#FFFFFF', 
-        transparent: true, 
-        opacity: 0.5 
-      })
-    )} ref={lineRef} />
-  );
+  return <primitive object={lineObject} ref={lineRef} />;
 }
 
 export default function StarConstellation() {
