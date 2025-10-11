@@ -31,6 +31,16 @@ export default function DocumentUpload({ isOpen, onClose }: DocumentUploadProps)
   const handleFileUpload = async () => {
     if (!file) return;
 
+    // File size validation (3MB limit due to Vercel's 4.5MB request body limit + base64 encoding overhead)
+    const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
+    if (file.size > MAX_FILE_SIZE) {
+      setResult({
+        success: false,
+        message: `File too large! Maximum size is 3MB. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB. Please compress or split the file.`
+      });
+      return;
+    }
+
     setUploading(true);
     setResult(null);
 
@@ -218,16 +228,25 @@ export default function DocumentUpload({ isOpen, onClose }: DocumentUploadProps)
                         const selectedFile = e.target.files?.[0];
                         if (selectedFile) {
                           setFile(selectedFile);
+                          setResult(null); // Clear any previous errors
                           if (!title) setTitle(selectedFile.name.split('.')[0]);
                         }
                       }}
                       className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-white/10 file:text-white hover:file:bg-white/20 file:cursor-pointer"
                     />
                     {file && (
-                      <p className="mt-2 text-sm text-gray-300 flex items-center gap-2">
-                        <FileText className="w-4 h-4" />
-                        Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
-                      </p>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-300 flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                        </p>
+                        {file.size > 3 * 1024 * 1024 && (
+                          <p className="mt-1 text-xs text-red-400 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            File exceeds 3MB limit! Please choose a smaller file.
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
