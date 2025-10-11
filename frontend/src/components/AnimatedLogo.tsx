@@ -109,76 +109,47 @@ export default function AnimatedLogo() {
 
   return (
     <div className="flex items-center gap-2 sm:gap-3 relative z-30">
-      {/* Animated Brain Icon - Enhanced visibility */}
+      {/* STATIC Brain Icon - No animation, always visible */}
       <div className="relative flex-shrink-0">
-        <AnimatePresence mode="wait">
-          {brainAnimating ? (
-            <motion.div
-              key={brainCharIndex}
-              initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              exit={{ opacity: 0, scale: 1.5, rotate: 180 }}
-              transition={{ duration: 0.15 }}
-              className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-xl sm:text-2xl text-white/80"
-            >
-              {ancientScripts[brainCharIndex % ancientScripts.length]}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="final-logo"
-              initial={{ opacity: 0, scale: 0, rotate: -360 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
-              transition={{ 
-                type: "spring",
-                stiffness: 200,
-                damping: 15,
-                duration: 0.8
-              }}
-            >
-              <div className="relative">
-                {/* Enhanced glow effect */}
-                <motion.div
-                  animate={{ 
-                    opacity: [0.6, 1, 0.6],
-                    scale: [1, 1.15, 1]
-                  }}
-                  transition={{ 
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className="absolute inset-0 bg-gradient-to-br from-purple-400/40 to-blue-400/40 rounded-full blur-md"
-                />
-                
-                {/* Brain Icon - Solid and always visible - Enhanced for mobile */}
-                <motion.div 
-                  className="relative bg-gradient-to-br from-purple-600/60 to-blue-600/60 p-2.5 sm:p-3 rounded-full backdrop-blur-xl border-2 border-white/50 shadow-2xl shadow-purple-500/50"
-                  whileHover={{ scale: 1.1, rotate: 15 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  style={{ minWidth: '40px', minHeight: '40px' }}
-                >
-                  <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-2xl" strokeWidth={3} />
-                </motion.div>
+        <div className="relative">
+          {/* Static glow effect */}
+          <motion.div
+            animate={{ 
+              opacity: [0.6, 1, 0.6],
+              scale: [1, 1.15, 1]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute inset-0 bg-gradient-to-br from-purple-400/40 to-blue-400/40 rounded-full blur-md"
+          />
+          
+          {/* Brain Icon - Static, always visible, enhanced for mobile */}
+          <div 
+            className="relative bg-gradient-to-br from-purple-600/60 to-blue-600/60 p-2.5 sm:p-3 rounded-full backdrop-blur-xl border-2 border-white/50 shadow-2xl shadow-purple-500/50"
+            style={{ minWidth: '40px', minHeight: '40px' }}
+          >
+            <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-2xl" strokeWidth={3} />
+          </div>
 
-                {/* Orbiting particles */}
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0"
-                >
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full" />
-                </motion.div>
-                <motion.div
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0"
-                >
-                  <div className="absolute bottom-0 right-0 w-1 h-1 bg-white/60 rounded-full" />
-                </motion.div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Orbiting particles */}
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0"
+          >
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full" />
+          </motion.div>
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0"
+          >
+            <div className="absolute bottom-0 right-0 w-1 h-1 bg-white/60 rounded-full" />
+          </motion.div>
+        </div>
       </div>
 
       {/* Animated Text - Each character cycles through ancient scripts */}
