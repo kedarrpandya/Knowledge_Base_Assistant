@@ -23,8 +23,6 @@ const ancientVariants: Record<string, string[]> = {
 const logoText = 'Knowledge Assistant';
 
 export default function AnimatedLogo() {
-  const [brainAnimating, setBrainAnimating] = useState(true);
-  const [brainCharIndex, setBrainCharIndex] = useState(0);
   const [textAnimationStarted, setTextAnimationStarted] = useState(false);
   const [activeCharIndex, setActiveCharIndex] = useState(-1);
   const [scriptCycleIndex, setScriptCycleIndex] = useState(0);
@@ -34,26 +32,12 @@ export default function AnimatedLogo() {
   // Ensure component is mounted before starting animation
   useEffect(() => {
     setMounted(true);
+    // Start text animation immediately (no brain animation delay)
+    setTimeout(() => {
+      setTextAnimationStarted(true);
+      setActiveCharIndex(0);
+    }, 100);
   }, []);
-
-  // Brain icon animation (first 1.5 seconds)
-  useEffect(() => {
-    if (!mounted) return;
-    
-    if (brainAnimating && brainCharIndex < 15) {
-      const timer = setTimeout(() => {
-        setBrainCharIndex(brainCharIndex + 1);
-      }, 80);
-      return () => clearTimeout(timer);
-    } else if (brainCharIndex >= 15) {
-      const timer = setTimeout(() => {
-        setBrainAnimating(false);
-        setTextAnimationStarted(true);
-        setActiveCharIndex(0);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [brainCharIndex, brainAnimating, mounted]);
 
   // Text character animation (4 seconds total for all characters with overlap)
   useEffect(() => {
