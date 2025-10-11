@@ -75,16 +75,6 @@ export default function AnimatedLogo() {
     }
   }, [textAnimationStarted, activeCharIndex, scriptCycleIndex]);
 
-  // Get ancient scripts for cycling animation
-  const ancientScripts = [
-    '𓂀', '𓃭', '𓄿', '𓅓', // Egyptian Hieroglyphs
-    'ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', // Norse Runes
-    '𐎀', '𐎁', '𐎂', '𐎃', // Cuneiform
-    'ॐ', 'अ', 'क', 'ग', // Sanskrit
-    '文', '字', '書', '知', // Chinese
-    'א', 'ב', 'ג', 'ד', // Hebrew
-    'Ω', 'Φ', 'Ψ', 'Σ', // Greek
-  ];
 
   // Always show static logo immediately, then animate
   if (!mounted) {
