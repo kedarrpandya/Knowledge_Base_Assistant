@@ -51,19 +51,20 @@ function Boundaries() {
   return null;
 }
 
-// Stars with constellation lines
+// Stars with constellation lines - OPTIMIZED for clarity
 function StarField() {
   const meshRef = useRef<THREE.Points>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
+  const starPositionsRef = useRef<Float32Array | null>(null);
 
   const [stars, lines] = useMemo(() => {
-    const starCount = 600; // Increased to 600 for denser filling
+    const starCount = 300; // Reduced from 600 for clearer view
     const positions = new Float32Array(starCount * 3);
     const linePositions = [];
 
     // Use fixed dimensions to prevent buffer resize issues
-    const width = 50;
-    const height = 30;
+    const width = 60;
+    const height = 35;
 
     // Generate star positions with wider distribution to fill space
     for (let i = 0; i < starCount; i++) {
@@ -72,7 +73,7 @@ function StarField() {
       positions[i * 3 + 2] = (Math.random() - 0.5) * 50;
     }
 
-    // Create more constellation connections
+    // Create FEWER constellation connections for clarity
     for (let i = 0; i < starCount; i++) {
       for (let j = i + 1; j < starCount; j++) {
         const dx = positions[i * 3] - positions[j * 3];
@@ -80,8 +81,8 @@ function StarField() {
         const dz = positions[i * 3 + 2] - positions[j * 3 + 2];
         const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-        // Connect nearby stars - increased distance for more connections
-        if (distance < 6) {
+        // Connect only VERY nearby stars - reduced from 6 to 4 for clarity
+        if (distance < 4) {
           linePositions.push(
             positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2],
             positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2]
@@ -90,20 +91,46 @@ function StarField() {
       }
     }
 
+    starPositionsRef.current = positions;
     return [positions, new Float32Array(linePositions)];
   }, []); // Remove viewport dependency to prevent buffer recreation
 
-  useFrame(({ mouse, clock }) => {
-    if (meshRef.current) {
-      // Subtle rotation and mouse following
-      meshRef.current.rotation.y = clock.getElapsedTime() * 0.02;
-      meshRef.current.rotation.x = mouse.y * 0.1;
-      meshRef.current.rotation.z = mouse.x * 0.1;
+  useFrame(({ mouse, clock, viewport }) => {
+    const mouseX = (mouse.x * viewport.width) / 2;
+    const mouseY = (mouse.y * viewport.height) / 2;
+    
+    if (meshRef.current && starPositionsRef.current) {
+      const positions = meshRef.current.geometry.attributes.position.array as Float32Array;
+      const originalPositions = starPositionsRef.current;
+      
+      // Interactive cursor following - stars move to create path
+      for (let i = 0; i < positions.length / 3; i++) {
+        const dx = mouseX - originalPositions[i * 3];
+        const dy = mouseY - originalPositions[i * 3 + 1];
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Stars within range move away from cursor to create path
+        if (distance < 8) {
+          const force = (1 - distance / 8) * 2;
+          positions[i * 3] = originalPositions[i * 3] - (dx / distance) * force;
+          positions[i * 3 + 1] = originalPositions[i * 3 + 1] - (dy / distance) * force;
+        } else {
+          // Smoothly return to original position
+          positions[i * 3] += (originalPositions[i * 3] - positions[i * 3]) * 0.05;
+          positions[i * 3 + 1] += (originalPositions[i * 3 + 1] - positions[i * 3 + 1]) * 0.05;
+        }
+      }
+      
+      meshRef.current.geometry.attributes.position.needsUpdate = true;
+      
+      // Subtle rotation
+      meshRef.current.rotation.y = clock.getElapsedTime() * 0.01;
+      meshRef.current.rotation.x = mouse.y * 0.05;
     }
+    
     if (linesRef.current) {
-      linesRef.current.rotation.y = clock.getElapsedTime() * 0.02;
-      linesRef.current.rotation.x = mouse.y * 0.1;
-      linesRef.current.rotation.z = mouse.x * 0.1;
+      linesRef.current.rotation.y = clock.getElapsedTime() * 0.01;
+      linesRef.current.rotation.x = mouse.y * 0.05;
     }
   });
 

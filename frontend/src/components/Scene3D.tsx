@@ -39,10 +39,10 @@ function InteractiveTorusKnot({ position }: { position: [number, number, number]
       <meshStandardMaterial
         color="#FFFFFF"
         wireframe
-        opacity={hovered ? 0.8 : 0.5}
+        opacity={hovered ? 0.9 : 0.7}
         transparent
         emissive="#FFFFFF"
-        emissiveIntensity={hovered ? 0.6 : 0.3}
+        emissiveIntensity={hovered ? 0.8 : 0.5}
       />
     </mesh>
   );
@@ -92,14 +92,14 @@ function InteractivePlanet({ position }: { position: [number, number, number] })
       {/* High-detail sphere - 64x64 segments for smooth, realistic planet */}
       <sphereGeometry args={[4.5, 64, 64]} />
       <meshStandardMaterial
-        color="#D1D5DB"
+        color="#E5E7EB"
         wireframe
-        opacity={hovered ? 0.8 : 0.5}
+        opacity={hovered ? 0.9 : 0.7}
         transparent
-        emissive="#D1D5DB"
-        emissiveIntensity={hovered ? 0.6 : 0.3}
-        metalness={0.3}
-        roughness={0.7}
+        emissive="#E5E7EB"
+        emissiveIntensity={hovered ? 0.8 : 0.5}
+        metalness={0.4}
+        roughness={0.6}
       />
     </mesh>
   );
@@ -107,16 +107,16 @@ function InteractivePlanet({ position }: { position: [number, number, number] })
 
 export default function Scene3D() {
   return (
-    <div className="fixed top-0 left-0 w-full h-full opacity-50" style={{ zIndex: -8, pointerEvents: 'none' }}>
+    <div className="fixed top-0 left-0 w-full h-full opacity-40" style={{ zIndex: -8, pointerEvents: 'none' }}>
       <Canvas camera={{ position: [0, 0, 15], fov: 75 }} style={{ pointerEvents: 'auto' }}>
-        {/* Enhanced Lighting */}
-        <ambientLight intensity={0.8} />
-        <pointLight position={[10, 10, 10]} intensity={2.5} color="#FFFFFF" />
-        <pointLight position={[-10, -10, -10]} intensity={1.5} color="#FFFFFF" />
-        <pointLight position={[0, 0, 10]} intensity={2} color="#FFFFFF" />
-        <spotLight position={[0, 15, 5]} intensity={2} color="#FFFFFF" angle={0.6} />
+        {/* Enhanced Lighting for better visibility */}
+        <ambientLight intensity={1.2} />
+        <pointLight position={[10, 10, 10]} intensity={3} color="#FFFFFF" />
+        <pointLight position={[-10, -10, -10]} intensity={2} color="#FFFFFF" />
+        <pointLight position={[0, 0, 10]} intensity={2.5} color="#FFFFFF" />
+        <spotLight position={[0, 15, 5]} intensity={3} color="#FFFFFF" angle={0.6} />
         
-        {/* Interactive Mobius Strip (Center) */}
+        {/* Interactive Mobius Strip (Center) - More visible */}
         <InteractiveTorusKnot position={[0, 0, -5]} />
         
         {/* Interactive Planet (Distant Right) - Realistic Earth-like planet */}
@@ -127,9 +127,9 @@ export default function Scene3D() {
           enableZoom={false}
           enablePan={false}
           autoRotate
-          autoRotateSpeed={0.2}
+          autoRotateSpeed={0.15}
           enableDamping
-          dampingFactor={0.05}
+          dampingFactor={0.08}
         />
       </Canvas>
     </div>

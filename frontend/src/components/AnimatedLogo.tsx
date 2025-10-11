@@ -102,20 +102,20 @@ export default function AnimatedLogo() {
     'Ω', 'Φ', 'Ψ', 'Σ', // Greek
   ];
 
-  // Don't render until mounted to prevent hydration issues
+  // Always show static logo immediately, then animate
   if (!mounted) {
     return (
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 relative z-30">
         <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
-          {/* Placeholder to prevent layout shift */}
+          {/* Solid placeholder - always visible */}
           <div className="relative">
-            <div className="relative bg-white/10 p-2 sm:p-3 rounded-full backdrop-blur-xl">
-              <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="relative bg-gradient-to-br from-purple-500/30 to-blue-500/30 p-2 sm:p-3 rounded-full backdrop-blur-xl border-2 border-white/30 shadow-lg shadow-purple-500/20">
+              <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-lg" strokeWidth={2.5} />
             </div>
           </div>
         </div>
         <div className="overflow-hidden flex-1 min-w-0">
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white drop-shadow-lg">
             Knowledge Assistant
           </h1>
         </div>
@@ -124,8 +124,8 @@ export default function AnimatedLogo() {
   }
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
-      {/* Animated Brain Icon */}
+    <div className="flex items-center gap-2 sm:gap-3 relative z-30">
+      {/* Animated Brain Icon - Enhanced visibility */}
       <div className="relative flex-shrink-0">
         <AnimatePresence mode="wait">
           {brainAnimating ? (
@@ -152,27 +152,27 @@ export default function AnimatedLogo() {
               }}
             >
               <div className="relative">
-                {/* Glow effect */}
+                {/* Enhanced glow effect */}
                 <motion.div
                   animate={{ 
-                    opacity: [0.5, 1, 0.5],
-                    scale: [1, 1.1, 1]
+                    opacity: [0.6, 1, 0.6],
+                    scale: [1, 1.15, 1]
                   }}
                   transition={{ 
                     duration: 2,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
-                  className="absolute inset-0 bg-white/60 rounded-full blur-sm"
+                  className="absolute inset-0 bg-gradient-to-br from-purple-400/40 to-blue-400/40 rounded-full blur-md"
                 />
                 
-                {/* Brain Icon */}
+                {/* Brain Icon - Solid and always visible */}
                 <motion.div 
-                  className="relative bg-white/10 p-2 sm:p-3 rounded-full backdrop-blur-xl"
+                  className="relative bg-gradient-to-br from-purple-500/40 to-blue-500/40 p-2 sm:p-3 rounded-full backdrop-blur-xl border-2 border-white/40 shadow-xl shadow-purple-500/30"
                   whileHover={{ scale: 1.1, rotate: 15 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-lg" strokeWidth={2.5} />
                 </motion.div>
 
                 {/* Orbiting particles */}
