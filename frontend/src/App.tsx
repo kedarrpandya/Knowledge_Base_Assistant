@@ -72,10 +72,32 @@ function App() {
     } catch (error) {
       console.error('Error querying API:', error);
       
+      // Extract detailed error message
+      let errorText = "Sorry, I encountered an error processing your question.";
+      
+      if (axios.isAxiosError(error) && error.response?.data) {
+        const data = error.response.data;
+        errorText = `❌ ${data.error || 'Error'}: ${data.message || 'Unknown error'}`;
+        
+        if (data.hint) {
+          errorText += `\n\n💡 ${data.hint}`;
+        }
+        
+        if (data.missingVars) {
+          errorText += `\n\nMissing: ${data.missingVars.join(', ')}`;
+        }
+        
+        if (data.details) {
+          errorText += `\n\n🔍 ${data.details}`;
+        }
+        
+        console.error('Detailed error:', data);
+      }
+      
       // Add error message
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Sorry, I encountered an error processing your question. Please make sure the backend server is running.",
+        text: errorText,
         isBot: true,
       };
       setMessages(prev => [...prev, errorMessage]);
