@@ -1,5 +1,7 @@
 import { GroqRAGService } from './groqRagService';
 import { v4 as uuidv4 } from 'uuid';
+import pdf from 'pdf-parse';
+import { createWorker } from 'tesseract.js';
 
 interface DocumentMetadata {
   title: string;
@@ -59,18 +61,55 @@ export class DocumentUploadService {
         case 'csv':
           content = buffer.toString('utf-8');
           break;
+
+        case 'pdf':
+          console.log(`📄 Extracting text from PDF: ${filename}`);
+          const pdfData = await pdf(buffer);
+          content = pdfData.text;
+          console.log(`✅ Extracted ${content.length} characters from PDF`);
+          break;
+
+        case 'png':
+        case 'jpg':
+        case 'jpeg':
+        case 'gif':
+        case 'bmp':
+        case 'webp':
+          console.log(`🖼️ Performing OCR on image: ${filename}`);
+          content = await this.extractTextFromImage(buffer);
+          console.log(`✅ Extracted ${content.length} characters from image via OCR`);
+          break;
+
         default:
           content = buffer.toString('utf-8');
           console.warn(`Unsupported file type: ${fileExtension}. Attempting to read as plain text.`);
           break;
       }
+
+      // Clean up extracted content
+      content = content.trim();
+      
+      if (!content || content.length < 10) {
+        throw new Error(`Insufficient content extracted from ${filename}. Please ensure the file contains readable text.`);
+      }
+
     } catch (error) {
       console.error(`Error extracting text from file ${filename}:`, error);
-      content = buffer.toString('utf-8');
-      title = `Error processing ${filename}`;
+      throw new Error(`Failed to extract text from ${filename}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
     return { title, content };
+  }
+
+  private async extractTextFromImage(buffer: Buffer): Promise<string> {
+    const worker = await createWorker('eng');
+    
+    try {
+      const { data: { text } } = await worker.recognize(buffer);
+      return text;
+    } finally {
+      await worker.terminate();
+    }
   }
 
   async deleteDocument(documentId: string): Promise<{ success: boolean; message: string }> {

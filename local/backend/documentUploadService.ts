@@ -1,5 +1,7 @@
 import { LocalRAGService } from './localRagService';
 import { GroqRAGService } from './groqRagService';
+import pdf from 'pdf-parse';
+import { createWorker } from 'tesseract.js';
 
 export interface DocumentUpload {
   title: string;
@@ -35,18 +37,18 @@ export class DocumentUploadService {
       this.validateDocument(document);
 
       // Index document in Qdrant
-      await this.ragService.indexDocument({
-        id: documentId,
-        title: document.title,
-        content: document.content,
-        metadata: {
+      await this.ragService.indexDocument(
+        documentId,
+        document.content,
+        document.title,
+        {
           category: document.category || 'general',
           tags: document.tags || [],
           author: document.author || 'unknown',
           source: document.source || 'user-upload',
           uploadedAt: new Date().toISOString(),
         }
-      });
+      );
 
       return {
         success: true,
@@ -138,8 +140,50 @@ export class DocumentUploadService {
           content: fileBuffer.toString('utf-8')
         };
 
+      case 'pdf':
+        console.log(`📄 Extracting text from PDF: ${fileName}`);
+        const pdfData = await pdf(fileBuffer);
+        console.log(`✅ Extracted ${pdfData.text.length} characters from PDF`);
+        return {
+          title: fileName,
+          content: pdfData.text
+        };
+
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+      case 'bmp':
+      case 'webp':
+        console.log(`🖼️ Performing OCR on image: ${fileName}`);
+        const imageText = await this.extractTextFromImage(fileBuffer);
+        console.log(`✅ Extracted ${imageText.length} characters from image via OCR`);
+        return {
+          title: fileName,
+          content: imageText
+        };
+
       default:
         throw new Error(`Unsupported file type: ${fileExtension}`);
+    }
+  }
+
+  /**
+   * Extract text from image using OCR
+   */
+  private async extractTextFromImage(buffer: Buffer): Promise<string> {
+    const worker = await createWorker('eng');
+    
+    try {
+      const { data: { text } } = await worker.recognize(buffer);
+      
+      if (!text || text.trim().length < 10) {
+        throw new Error('Could not extract sufficient text from image. Please ensure the image contains readable text.');
+      }
+      
+      return text;
+    } finally {
+      await worker.terminate();
     }
   }
 

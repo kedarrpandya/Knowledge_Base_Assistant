@@ -208,18 +208,25 @@ export default function DocumentUpload({ isOpen, onClose }: DocumentUploadProps)
                 {/* File Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Or Upload a File (TXT, JSON, MD)
+                    Or Upload a File (TXT, JSON, MD, PDF, Images)
                   </label>
                   <div className="glass p-4 rounded-lg border-2 border-dashed border-white/20 hover:border-white/40 transition">
                     <input
                       type="file"
-                      accept=".txt,.json,.md"
-                      onChange={(e) => setFile(e.target.files?.[0] || null)}
+                      accept=".txt,.json,.md,.pdf,.png,.jpg,.jpeg,.gif,.bmp,.webp"
+                      onChange={(e) => {
+                        const selectedFile = e.target.files?.[0];
+                        if (selectedFile) {
+                          setFile(selectedFile);
+                          if (!title) setTitle(selectedFile.name.split('.')[0]);
+                        }
+                      }}
                       className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-white/10 file:text-white hover:file:bg-white/20 file:cursor-pointer"
                     />
                     {file && (
-                      <p className="mt-2 text-sm text-gray-300">
-                        Selected: {file.name}
+                      <p className="mt-2 text-sm text-gray-300 flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
                       </p>
                     )}
                   </div>
