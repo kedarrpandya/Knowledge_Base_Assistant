@@ -49,9 +49,16 @@ export class GroqRAGService {
         };
       }
 
-      // 2. Build context from results
+      // 2. Build context from results - LIMIT content to prevent token overflow
+      // Groq free tier: 6000 tokens/min, ~4500 chars = ~1000 tokens safe limit per doc
+      const MAX_CONTENT_LENGTH = 1500; // chars per document
       const context = searchResults
-        .map((r, idx) => `[Document ${idx + 1}: ${r.title}]\n${r.content}`)
+        .map((r, idx) => {
+          const truncatedContent = r.content.length > MAX_CONTENT_LENGTH 
+            ? r.content.substring(0, MAX_CONTENT_LENGTH) + '...[truncated]'
+            : r.content;
+          return `[Document ${idx + 1}: ${r.title}]\n${truncatedContent}`;
+        })
         .join('\n\n---\n\n');
 
       // 3. Generate answer with Groq (SUPER FAST!)
@@ -118,7 +125,7 @@ export class GroqRAGService {
         }))
         .filter(doc => doc.score > 0.1)
         .sort((a, b) => b.score - a.score)
-        .slice(0, 3);
+        .slice(0, 2); // Reduced from 3 to 2 documents to stay under token limit
 
       return scoredDocs;
     } catch (error) {
