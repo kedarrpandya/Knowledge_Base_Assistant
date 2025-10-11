@@ -109,8 +109,8 @@ export default function AnimatedLogo() {
         <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
           {/* Solid placeholder - always visible */}
           <div className="relative">
-            <div className="relative bg-gradient-to-br from-purple-500/30 to-blue-500/30 p-2 sm:p-3 rounded-full backdrop-blur-xl border-2 border-white/30 shadow-lg shadow-purple-500/20">
-              <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-lg" strokeWidth={2.5} />
+            <div className="relative bg-gradient-to-br from-purple-600/60 to-blue-600/60 p-2.5 sm:p-3 rounded-full backdrop-blur-xl border-2 border-white/50 shadow-2xl shadow-purple-500/50" style={{ minWidth: '40px', minHeight: '40px' }}>
+              <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-2xl" strokeWidth={3} />
             </div>
           </div>
         </div>
@@ -166,13 +166,14 @@ export default function AnimatedLogo() {
                   className="absolute inset-0 bg-gradient-to-br from-purple-400/40 to-blue-400/40 rounded-full blur-md"
                 />
                 
-                {/* Brain Icon - Solid and always visible */}
+                {/* Brain Icon - Solid and always visible - Enhanced for mobile */}
                 <motion.div 
-                  className="relative bg-gradient-to-br from-purple-500/40 to-blue-500/40 p-2 sm:p-3 rounded-full backdrop-blur-xl border-2 border-white/40 shadow-xl shadow-purple-500/30"
+                  className="relative bg-gradient-to-br from-purple-600/60 to-blue-600/60 p-2.5 sm:p-3 rounded-full backdrop-blur-xl border-2 border-white/50 shadow-2xl shadow-purple-500/50"
                   whileHover={{ scale: 1.1, rotate: 15 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  style={{ minWidth: '40px', minHeight: '40px' }}
                 >
-                  <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white drop-shadow-lg" strokeWidth={2.5} />
+                  <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-2xl" strokeWidth={3} />
                 </motion.div>
 
                 {/* Orbiting particles */}
